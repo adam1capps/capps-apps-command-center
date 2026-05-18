@@ -1,0 +1,135 @@
+/* ============================================================
+   Roof MRI + ReDry — Design System Tokens
+   Colors and typography for both brands
+   ============================================================ */
+
+:root {
+  /* ---------- Shared Brand Bridge ---------- */
+  --color-navy:            #1E2C55;  /* Roof MRI primary / ReDry accent bridge */
+  --color-navy-tint:       #B0C4DE;  /* Light blue for subtitles on navy */
+
+  /* ---------- Roof MRI Palette ---------- */
+  --mri-primary:           #1E2C55;  /* Navy - dominant */
+  --mri-accent:            #00BD70;  /* Green - section borders, date text */
+  --mri-body-text:         #333333;  /* Dark gray body */
+  --mri-muted:             #6B7280;  /* Gray for footer/meta */
+  --mri-surface:           #FFFFFF;  /* White page */
+  --mri-surface-alt:       #F5F7FA;  /* Subtle off-white for cards */
+
+  /* Diagnostic indicator accents (from logo) */
+  --mri-status-green:      #00BD70;
+  --mri-status-yellow:     #F5C518;
+  --mri-status-red:        #D64545;
+
+  /* ---------- ReDry Palette ---------- */
+  --redry-primary:         #E99A3F;  /* Orange - dominant */
+  --redry-secondary:       #1E2C55;  /* Navy - brand bridge */
+  --redry-body-text:       #3A3A3A;  /* Charcoal body */
+  --redry-muted:           #6B7280;  /* Gray for contact info */
+  --redry-surface:         #FFFFFF;  /* White page */
+  --redry-surface-alt:     #FAFAFA;  /* Subtle off-white */
+
+  /* ---------- Typography Stacks ---------- */
+  --font-mri:              "Trebuchet MS", "Lucida Sans Unicode",
+                           "Lucida Grande", Tahoma, sans-serif;
+  --font-redry:            Verdana, Geneva, Tahoma, sans-serif;
+
+  /* ---------- Type Scale (shared) ---------- */
+  --text-xs:               0.75rem;   /* 12px */
+  --text-sm:               0.875rem;  /* 14px */
+  --text-base:             1rem;      /* 16px */
+  --text-md:               1.0625rem; /* 17px - Roof MRI body at 10.5pt equivalent */
+  --text-lg:               1.125rem;  /* 18px */
+  --text-xl:               1.375rem;  /* 22px - ReDry title block */
+  --text-2xl:              1.75rem;
+  --text-3xl:              2.25rem;
+
+  /* ---------- Font Weights ---------- */
+  --weight-regular:        400;
+  --weight-bold:           700;
+
+  /* ---------- Letter Spacing (brand-specific) ---------- */
+  --tracking-redry-label:  0.04em;    /* Orange labels: DATE, LOCATION */
+  --tracking-redry-header: 0.06em;    /* Orange all-caps section headers */
+  --tracking-mri-date:     0.08em;    /* Green small caps date */
+
+  /* ---------- Line Heights ---------- */
+  --leading-tight:         1.2;
+  --leading-normal:        1.5;
+  --leading-relaxed:       1.65;
+}
+
+/* ============================================================
+   Roof MRI Base Styles
+   Apply via: <body class="brand-mri"> or <div class="brand-mri">
+   ============================================================ */
+
+.brand-mri {
+  font-family: var(--font-mri);
+  font-size: var(--text-md);
+  line-height: var(--leading-relaxed);
+  color: var(--mri-body-text);
+  background: var(--mri-surface);
+}
+
+.brand-mri h1,
+.brand-mri h2,
+.brand-mri h3 {
+  font-family: var(--font-mri);
+  color: var(--mri-primary);
+  font-weight: var(--weight-bold);
+}
+
+.brand-mri .accent { color: var(--mri-accent); }
+.brand-mri .date-stamp {
+  color: var(--mri-accent);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-mri-date);
+  font-size: var(--text-sm);
+}
+
+/* ============================================================
+   ReDry Base Styles
+   Apply via: <body class="brand-redry"> or <div class="brand-redry">
+   ============================================================ */
+
+.brand-redry {
+  font-family: var(--font-redry);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  color: var(--redry-body-text);
+  background: var(--redry-surface);
+}
+
+.brand-redry h1 {
+  font-family: var(--font-redry);
+  color: var(--redry-secondary);       /* Navy, not orange - brand bridge */
+  font-weight: var(--weight-bold);
+  font-size: var(--text-xl);
+}
+
+.brand-redry h2 {
+  font-family: var(--font-redry);
+  color: var(--redry-primary);          /* Orange bold all-caps */
+  font-weight: var(--weight-bold);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-redry-header);
+}
+
+.brand-redry .meta-label {
+  color: var(--redry-primary);
+  font-weight: var(--weight-bold);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-redry-label);
+  font-size: var(--text-sm);
+}
+
+.brand-redry .divider-bar {
+  background: var(--redry-primary);
+  height: 6px;
+  width: 100%;
+}
+
+.brand-redry .rule-navy {
+  border-color: var(--redry-secondary);
+}
