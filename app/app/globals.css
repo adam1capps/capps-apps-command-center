@@ -1,0 +1,51 @@
+/* Capps Apps Command Center — global styles. */
+/* Ports prototype/index.html:11-55 (reset, body font, keyframes). */
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: #FFFFFF;
+  color: #0F172A;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body { min-height: 100vh; }
+
+button, input, select, textarea { font-family: inherit; }
+
+a { color: inherit; }
+
+/* shared animations (ported from prototype/index.html:25-55) */
+@keyframes ccFade {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes ccSlideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes ccSlideIn {
+  from { transform: translateX(40px); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+@keyframes ccPulse {
+  0%   { box-shadow: 0 0 0 0 rgba(214, 69, 69, 0.45); }
+  70%  { box-shadow: 0 0 0 6px rgba(214, 69, 69, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(214, 69, 69, 0); }
+}
+@keyframes ccConnPulse {
+  0%   { box-shadow: 0 0 0 0 rgba(0, 189, 112, 0.55); }
+  70%  { box-shadow: 0 0 0 7px rgba(0, 189, 112, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(0, 189, 112, 0); }
+}
+
+/* slim scrollbar on pipeline */
+::-webkit-scrollbar { height: 8px; width: 8px; }
+::-webkit-scrollbar-thumb { background: #E5E7EB; border-radius: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* selection */
+::selection { background: #1E2C5520; color: #0F172A; }
