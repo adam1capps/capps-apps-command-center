@@ -93,6 +93,10 @@ You may have more. Verify on session start.
 
 If the new session has the **Netlify CLI** (`netlify`) available, that unlocks: source-link, `netlify db init`, `netlify env:list`, `netlify deploy --build`. Useful when MCP gaps bite.
 
+## Standing authorizations
+
+**PR merges.** Claude may merge PRs into `implement-command-center` without asking, when ALL of these are true: (1) base branch is `implement-command-center` (never `main`/`production`); (2) head branch is one Claude pushed in this session or a prior session; (3) all CI checks are green; (4) no unresolved review threads; (5) SCP pre-flight (`pnpm typecheck && pnpm lint && pnpm build` from `app/`) passes locally on the head SHA; (6) merge method is **squash** with a one-line summary derived from the PR title. After merge: run the full SCP, record the merge SHA + sanity-check result in PLAN.md tracker, commit + push that update. Anything outside those conditions → still ask first. Merges into `main`/`production` or any branch with a `release/*` prefix → always ask, no exceptions.
+
 ## Sanity Check Protocol (SCP) — abbreviated
 
 After EVERY merge into `implement-command-center`:
