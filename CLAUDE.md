@@ -77,7 +77,7 @@ The user is providing **Neon connection strings** (pooled + unpooled) from neon.
 | `CAPPSHUB_WEBHOOK_SECRET` (Netlify env) | done | 32-byte hex, secret |
 | `CAPPSHUB_HOOK_TOKEN` (Netlify env) | done | 32-byte hex, secret |
 | `X_TRIGGER_TOKEN` (Netlify env) | done | 32-byte hex, secret. Used by Phase 4 `/api/poll-now` |
-| Neon project | **user creating now at neon.tech** | resume above when URLs arrive |
+| Neon project | done | `capps-command-center` in ReDry LLC org (Scale plan), branch `production`, db `neondb`, role `neondb_owner`. Tables `apps` (37) + `status_snapshots` (37) seeded 2026-05-19 via SQL Editor with `app/db/bundle-seed.sql`. **Gotcha:** new Neon projects in this org ship with Settings → Networking → "Allow traffic via the public internet" OFF. Toggle ON; leave VPC OFF. |
 | Site public access | user toggling now | was 403 `host_not_allowed`; user flipping Site access → Public in Netlify UI |
 | Clerk app + keys | pending user action | Required by Phase 5 only |
 | DNS `hub.cappsapps.ai` | not started | Phase 14 cutover |
