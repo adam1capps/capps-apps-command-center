@@ -794,7 +794,7 @@ One adjustment from the brief's draft order: auth lands **before** the rich deta
 **Update this section after every merge.** Future agents and future-you read this first.
 
 ### Current phase
-**Phase 3 (Public showcase route)** — Phase 2 merged at `dfb9676` with seed verified against live Neon. Next: build `/` from real DB data per PLAN.md §Phase 3.
+**Phase 4 (Scheduled poller)** — Phase 3 showcase shipped (PRs #5 `a0f78d0`, #6 `9071620`). Next: Netlify Scheduled Function writing real status_snapshots per PLAN.md §Phase 4.
 
 ### Phase status
 
@@ -803,8 +803,8 @@ One adjustment from the brief's draft order: auth lands **before** the rich deta
 | 0 | Provisioning | mostly done | — | — | Clerk app + keys still needed; Neon auto-provisions at first deploy |
 | 1 | Repo reshape + Next.js skeleton | done | PR 1: `c1ac76b` · PR 2: `5292d5d` (both merged 2026-05-19) | 2026-05-19 · green · `pnpm build` + `pnpm lint` pass locally; Netlify auto-deploy pending repo-link | — |
 | 2 | Neon schema + seed | done | PR #3 merged at `dfb9676` (2026-05-19) | 2026-05-19 · green · bundle SQL run via Neon SQL Editor: 37 apps, 37 snapshots, invoice-manager=broken | — |
-| 3 | Public showcase route | todo | — | — | — |
-| 4 | Scheduled poller | todo | — | — | — |
+| 3 | Public showcase route | done | PR #5 `a0f78d0` (shell) · PR #6 `9071620` (grid) | 2026-05-20 · green · typecheck/lint/build pass; `/` dynamic, shell+grid render from live DB | — |
+| 4 | Scheduled poller | in-progress | — | — | poller verified only after deploy (no DB/GitHub egress locally) |
 | 5 | Clerk auth + Grid view | todo | — | — | — |
 | 6 | Pipeline + Needs Attention views | todo | — | — | — |
 | 7 | App detail page (read-mostly) | todo | — | — | — |
