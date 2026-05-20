@@ -794,7 +794,7 @@ One adjustment from the brief's draft order: auth lands **before** the rich deta
 **Update this section after every merge.** Future agents and future-you read this first.
 
 ### Current phase
-**Phase 2 (Neon schema + seed)** seed verified against live Neon — PR #3 ready to merge. Next: merge, run SCP, start Phase 3.
+**Phase 3 (Public showcase route)** — Phase 2 merged at `dfb9676` with seed verified against live Neon. Next: build `/` from real DB data per PLAN.md §Phase 3.
 
 ### Phase status
 
@@ -802,7 +802,7 @@ One adjustment from the brief's draft order: auth lands **before** the rich deta
 |---|-------|--------|-----------------|-------------------|----------|
 | 0 | Provisioning | mostly done | — | — | Clerk app + keys still needed; Neon auto-provisions at first deploy |
 | 1 | Repo reshape + Next.js skeleton | done | PR 1: `c1ac76b` · PR 2: `5292d5d` (both merged 2026-05-19) | 2026-05-19 · green · `pnpm build` + `pnpm lint` pass locally; Netlify auto-deploy pending repo-link | — |
-| 2 | Neon schema + seed | seed verified, ready to merge | PR #3 head: `50639f1`; merge pending | 2026-05-19 · green · bundle SQL run via Neon SQL Editor: 37 apps, 37 snapshots, invoice-manager=broken | — |
+| 2 | Neon schema + seed | done | PR #3 merged at `dfb9676` (2026-05-19) | 2026-05-19 · green · bundle SQL run via Neon SQL Editor: 37 apps, 37 snapshots, invoice-manager=broken | — |
 | 3 | Public showcase route | todo | — | — | — |
 | 4 | Scheduled poller | todo | — | — | — |
 | 5 | Clerk auth + Grid view | todo | — | — | — |
