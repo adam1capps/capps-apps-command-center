@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { CC } from "@/lib/tokens";
 import type { Category } from "@/lib/tokens";
@@ -8,17 +8,45 @@ import type { App } from "@/db/schema";
 
 import { Card } from "./primitives";
 
-// Ported from prototype/ui-detail.jsx:144-194. Local-only for Phase 7B: edits
-// are not persisted (Phase 8B wires a PATCH). A hint makes that explicit.
+type SaveState = "idle" | "saving" | "saved" | "error";
+
+// Ported from prototype/ui-detail.jsx:144-194; Phase 8B persists via PATCH
+// /api/apps/[slug]/next-move with optimistic update + rollback.
 export function NextMoveCard({ app }: { app: App }) {
   const cat = CC.CATS[app.category as Category] ?? CC.CATS.internal;
+  const [current, setCurrent] = useState(app.nextMove ?? "");
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(app.nextMove ?? "");
-  const [dirty, setDirty] = useState(false);
+  const [state, setState] = useState<SaveState>("idle");
+  const savedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const stopEditing = () => {
-    setDirty(draft.trim() !== (app.nextMove ?? ""));
+  useEffect(() => () => {
+    if (savedTimer.current) clearTimeout(savedTimer.current);
+  }, []);
+
+  const commit = async () => {
     setEditing(false);
+    const next = draft.trim();
+    const prev = current;
+    if (next === prev) return;
+
+    setCurrent(next); // optimistic
+    setState("saving");
+    try {
+      const res = await fetch(`/api/apps/${app.slug}/next-move`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ value: next || null }),
+      });
+      if (!res.ok) throw new Error(String(res.status));
+      setState("saved");
+      if (savedTimer.current) clearTimeout(savedTimer.current);
+      savedTimer.current = setTimeout(() => setState("idle"), 3000);
+    } catch {
+      setCurrent(prev); // rollback
+      setDraft(prev);
+      setState("error");
+    }
   };
 
   return (
@@ -29,13 +57,13 @@ export function NextMoveCard({ app }: { app: App }) {
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === "Enter") stopEditing();
+            if (e.key === "Enter") commit();
             if (e.key === "Escape") {
-              setDraft(app.nextMove ?? "");
+              setDraft(current);
               setEditing(false);
             }
           }}
-          onBlur={stopEditing}
+          onBlur={commit}
           style={{
             width: "100%",
             padding: "8px 10px",
@@ -50,30 +78,40 @@ export function NextMoveCard({ app }: { app: App }) {
         />
       ) : (
         <div
-          onClick={() => setEditing(true)}
+          onClick={() => {
+            setDraft(current);
+            setEditing(true);
+          }}
           style={{
             fontSize: 16,
-            color: draft ? CC.INK : CC.MUTED_2,
+            color: current ? CC.INK : CC.MUTED_2,
             lineHeight: 1.45,
             cursor: "text",
             padding: "4px 0",
-            fontStyle: draft ? "normal" : "italic",
+            fontStyle: current ? "normal" : "italic",
           }}
         >
-          {draft || "click to add"}
+          {current || "click to add"}
         </div>
       )}
 
-      {dirty && (
+      {state !== "idle" && (
         <div
           style={{
             marginTop: 8,
             fontFamily: "var(--font-space-mono), monospace",
             fontSize: 10.5,
-            color: CC.MUTED_2,
+            color:
+              state === "error"
+                ? CC.H_BROKEN
+                : state === "saved"
+                  ? CC.H_HEALTHY
+                  : CC.MUTED_2,
           }}
         >
-          saving lands in Phase 8 (not persisted yet)
+          {state === "saving" && "saving..."}
+          {state === "saved" && "saved"}
+          {state === "error" && "save failed, reverted"}
         </div>
       )}
 

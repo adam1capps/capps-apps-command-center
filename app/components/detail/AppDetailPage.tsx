@@ -141,7 +141,7 @@ export function AppDetailPage({
 
         <Row>
           <NextMoveCard app={app} />
-          <PlanCard category={app.category} plan={intel.plan} />
+          <PlanCard slug={app.slug} category={app.category} plan={app.plan ?? intel.plan} />
         </Row>
 
         <Row>
