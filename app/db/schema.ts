@@ -1,4 +1,5 @@
-import { pgTable, uuid, text, integer, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, integer, boolean, timestamp, jsonb, check } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 
 export interface PlanItem {
   id: string;
@@ -54,8 +55,32 @@ export const changeLog = pgTable("change_log", {
   changedAt: timestamp("changed_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+// Notes + instructions per app (Phase 9). source: manual | slash-command |
+// hook | claude-md. kind: instruction | note.
+export const notes = pgTable(
+  "notes",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    appId: uuid("app_id")
+      .notNull()
+      .references(() => apps.id, { onDelete: "cascade" }),
+    kind: text("kind").notNull(),
+    title: text("title").notNull().default(""),
+    body: text("body").notNull().default(""),
+    source: text("source").notNull().default("manual"),
+    repoPath: text("repo_path"),
+    commitSha: text("commit_sha"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+    createdByEmail: text("created_by_email"),
+  },
+  (t) => [check("notes_kind_check", sql`${t.kind} in ('instruction', 'note')`)],
+);
+
 export type App = typeof apps.$inferSelect;
 export type NewApp = typeof apps.$inferInsert;
 export type StatusSnapshot = typeof statusSnapshots.$inferSelect;
 export type NewStatusSnapshot = typeof statusSnapshots.$inferInsert;
 export type ChangeLogEntry = typeof changeLog.$inferSelect;
+export type Note = typeof notes.$inferSelect;
+export type NewNote = typeof notes.$inferInsert;
