@@ -1,5 +1,20 @@
+import { Show, SignInButton, UserButton } from "@clerk/nextjs";
+
 import { CC } from "@/lib/tokens";
 import { Mark } from "./Mark";
+
+const signInButtonStyle: React.CSSProperties = {
+  background: CC.NAVY,
+  color: "#fff",
+  border: "none",
+  padding: "8px 14px",
+  borderRadius: 6,
+  fontFamily: "inherit",
+  fontSize: 12.5,
+  fontWeight: 600,
+  textDecoration: "none",
+  cursor: "pointer",
+};
 
 const navLink: React.CSSProperties = {
   fontSize: 13,
@@ -65,22 +80,17 @@ export function PublicHeader() {
           >
             Consulting
           </a>
-          <a
-            href="/sign-in"
-            style={{
-              background: CC.NAVY,
-              color: "#fff",
-              border: "none",
-              padding: "8px 14px",
-              borderRadius: 6,
-              fontFamily: "inherit",
-              fontSize: 12.5,
-              fontWeight: 600,
-              textDecoration: "none",
-            }}
-          >
-            Sign in
-          </a>
+          <Show when="signed-out">
+            <SignInButton mode="redirect">
+              <button style={signInButtonStyle}>Sign in</button>
+            </SignInButton>
+          </Show>
+          <Show when="signed-in">
+            <a href="/dashboard" style={navLink}>
+              Dashboard
+            </a>
+            <UserButton />
+          </Show>
         </nav>
       </div>
     </header>

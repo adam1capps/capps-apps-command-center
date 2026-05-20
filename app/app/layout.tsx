@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { DM_Sans, Space_Mono } from "next/font/google";
+import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 
 const dmSans = DM_Sans({
@@ -25,7 +26,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${dmSans.variable} ${spaceMono.variable}`}>
       <body style={{ fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
-        {children}
+        <ClerkProvider
+          signInUrl="/sign-in"
+          signInFallbackRedirectUrl="/dashboard"
+        >
+          {children}
+        </ClerkProvider>
       </body>
     </html>
   );
