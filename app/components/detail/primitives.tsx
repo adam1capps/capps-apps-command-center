@@ -212,3 +212,14 @@ export function Empty({ text }: { text: string }) {
     </div>
   );
 }
+
+export function labelMonoSm(color?: string): React.CSSProperties {
+  return {
+    fontFamily: "var(--font-space-mono), monospace",
+    fontSize: 9.5,
+    fontWeight: 700,
+    color: color ?? CC.MUTED_2,
+    textTransform: "uppercase",
+    letterSpacing: ".08em",
+  };
+}

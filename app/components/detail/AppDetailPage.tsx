@@ -11,12 +11,24 @@ import type { App, StatusSnapshot } from "@/db/schema";
 import type { Issue } from "@/lib/derive";
 import type { AppIntel } from "@/lib/intel";
 
-import { Card, IssuesBanner, Row, pillBtnStyle, launchBtnStyle } from "./primitives";
+import {
+  Card,
+  IssuesBanner,
+  Row,
+  labelMonoSm,
+  pillBtnStyle,
+  launchBtnStyle,
+} from "./primitives";
 import { Hero } from "./Hero";
 import { QuickStatStrip } from "./QuickStatStrip";
 import { NextMoveCard } from "./NextMoveCard";
 import { PlanCard } from "./PlanCard";
 import { ActivityFeed } from "./panels/ActivityFeed";
+import { RepositoryPanel } from "./panels/RepositoryPanel";
+import { DatabasePanel } from "./panels/DatabasePanel";
+import { HostingPanel } from "./panels/HostingPanel";
+import { ApiUsagePanel } from "./panels/ApiUsagePanel";
+import { TrafficPanel } from "./panels/TrafficPanel";
 
 // Ported from prototype/ui-detail.jsx:8-260. Repository/DB/Hosting/API/Traffic
 // panels land in PR 7C.
@@ -132,9 +144,61 @@ export function AppDetailPage({
           <PlanCard category={app.category} plan={intel.plan} />
         </Row>
 
-        <Card title="Activity">
-          <ActivityFeed snapshot={snapshot} intel={intel} />
-        </Card>
+        <Row>
+          <Card title="Activity">
+            <ActivityFeed snapshot={snapshot} intel={intel} />
+          </Card>
+          <Card
+            title="Repository"
+            right={
+              app.githubRepo ? (
+                <span
+                  style={{
+                    fontFamily: "var(--font-space-mono), monospace",
+                    fontSize: 10.5,
+                    color: CC.MUTED,
+                  }}
+                >
+                  github.com/{app.githubRepo}
+                </span>
+              ) : undefined
+            }
+          >
+            <RepositoryPanel intel={intel} githubRepo={app.githubRepo} />
+          </Card>
+        </Row>
+
+        <Row>
+          <Card
+            title="Database"
+            right={
+              intel.database ? (
+                <span style={labelMonoSm()}>NEON · {intel.database.region}</span>
+              ) : undefined
+            }
+          >
+            <DatabasePanel db={intel.database} />
+          </Card>
+          <Card
+            title="Hosting"
+            right={
+              intel.hosting ? (
+                <span style={labelMonoSm()}>{intel.hosting.provider.toUpperCase()}</span>
+              ) : undefined
+            }
+          >
+            <HostingPanel hosting={intel.hosting} deploys={intel.deploys} />
+          </Card>
+        </Row>
+
+        <Row>
+          <Card title="API usage · 24h">
+            <ApiUsagePanel rows={intel.apiUsage} />
+          </Card>
+          <Card title="Traffic · 7d">
+            <TrafficPanel traffic={intel.traffic} accent={cat.accent} />
+          </Card>
+        </Row>
       </div>
     </div>
   );
