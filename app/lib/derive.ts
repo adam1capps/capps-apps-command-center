@@ -86,7 +86,17 @@ export interface AppForIssues {
   blockers: string | null;
 }
 
-export function getIssues(app: AppForIssues, snap: DerivedSnapshot): Issue[] {
+// Structural subset getIssues reads. Satisfied by both DerivedSnapshot and the
+// persisted status_snapshots row (whose date fields are Date, not string).
+export interface IssueSnapshot {
+  urlStatus: number | null;
+  urlResponseMs: number | null;
+  daysSinceCommit: number | null;
+  lastCommitMsg: string | null;
+  driftDetected: boolean;
+}
+
+export function getIssues(app: AppForIssues, snap: IssueSnapshot): Issue[] {
   const out: Issue[] = [];
   if (app.stage === "archive") return out;
 
