@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { AppDetailPage } from "@/components/detail/AppDetailPage";
 import { getAppBySlug } from "@/lib/db-queries";
 import { getIssues } from "@/lib/derive";
+import { intelFor } from "@/lib/intel";
 import type { Stage } from "@/lib/tokens";
 
 // Reads live data per request; protected by proxy.ts (clerkMiddleware).
@@ -24,5 +25,19 @@ export default async function AppDetailRoute({
       )
     : [];
 
-  return <AppDetailPage app={app} snapshot={app.snapshot} issues={issues} />;
+  const intel = intelFor({
+    slug: app.slug,
+    stage: app.stage,
+    githubRepo: app.githubRepo,
+    liveUrl: app.liveUrl,
+    hosting: app.hosting,
+    apiDependencies: app.apiDependencies,
+    nextMove: app.nextMove,
+    urlStatus: app.snapshot?.urlStatus ?? null,
+  });
+
+  return (
+    <AppDetailPage app={app} snapshot={app.snapshot} issues={issues} intel={intel} />
+  );
 }
+

@@ -9,19 +9,27 @@ import { CC } from "@/lib/tokens";
 import type { Category } from "@/lib/tokens";
 import type { App, StatusSnapshot } from "@/db/schema";
 import type { Issue } from "@/lib/derive";
+import type { AppIntel } from "@/lib/intel";
 
-import { IssuesBanner, pillBtnStyle, launchBtnStyle } from "./primitives";
+import { Card, IssuesBanner, Row, pillBtnStyle, launchBtnStyle } from "./primitives";
+import { Hero } from "./Hero";
+import { QuickStatStrip } from "./QuickStatStrip";
+import { NextMoveCard } from "./NextMoveCard";
+import { PlanCard } from "./PlanCard";
+import { ActivityFeed } from "./panels/ActivityFeed";
 
-// Ported from prototype/ui-detail.jsx:8-100 (top bar). Hero, quick stats, and
-// panels land in PR 7B/7C; this shell establishes the route, sticky top bar,
-// and responsive container.
+// Ported from prototype/ui-detail.jsx:8-260. Repository/DB/Hosting/API/Traffic
+// panels land in PR 7C.
 export function AppDetailPage({
   app,
+  snapshot,
   issues,
+  intel,
 }: {
   app: App;
   snapshot: StatusSnapshot | null;
   issues: Issue[];
+  intel: AppIntel;
 }) {
   const cat = CC.CATS[app.category as Category] ?? CC.CATS.internal;
   const router = useRouter();
@@ -113,21 +121,20 @@ export function AppDetailPage({
       </header>
 
       <div style={{ maxWidth: 1280, margin: "0 auto", padding: "28px 28px 80px" }}>
+        <Hero app={app} snapshot={snapshot} />
+
         {issues.length > 0 && <IssuesBanner issues={issues} />}
 
-        <div
-          style={{
-            border: `1px solid ${CC.HAIR}`,
-            borderRadius: 10,
-            background: "#fff",
-            padding: "28px 24px",
-            fontFamily: "var(--font-space-mono), monospace",
-            fontSize: 13,
-            color: CC.MUTED,
-          }}
-        >
-          Hero, quick stats, plan, and panels land in the next slices.
-        </div>
+        <QuickStatStrip app={app} snapshot={snapshot} intel={intel} />
+
+        <Row>
+          <NextMoveCard app={app} />
+          <PlanCard category={app.category} plan={intel.plan} />
+        </Row>
+
+        <Card title="Activity">
+          <ActivityFeed snapshot={snapshot} intel={intel} />
+        </Card>
       </div>
     </div>
   );
