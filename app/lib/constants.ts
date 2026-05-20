@@ -29,3 +29,12 @@ export const STAGE_LABEL: Record<Stage, string> = {
   mature:    "Mature",
   archive:   "Archive",
 };
+
+// Dashboard view tabs. Mirrors prototype/app.jsx:14-18.
+export const VIEWS = [
+  { id: "grid",      label: "Grid",            sub: "Launcher" },
+  { id: "pipeline",  label: "Pipeline",        sub: "Lifecycle" },
+  { id: "attention", label: "Needs Attention", sub: "Triage" },
+] as const;
+
+export type ViewId = (typeof VIEWS)[number]["id"];

@@ -1,8 +1,10 @@
-import { and, eq, isNotNull, ne } from "drizzle-orm";
+import { and, desc, eq, isNotNull, ne } from "drizzle-orm";
 
 import { db } from "@/db/client";
-import { apps } from "@/db/schema";
-import type { App } from "@/db/schema";
+import { apps, statusSnapshots } from "@/db/schema";
+import type { App, StatusSnapshot } from "@/db/schema";
+
+export type AppWithSnapshot = App & { snapshot: StatusSnapshot | null };
 
 // Public showcase set: visible, not archived, has a live URL.
 // Mirrors the prototype filter in ui-showcase.jsx:6-8.
@@ -17,4 +19,18 @@ export async function getShowcaseApps(): Promise<App[]> {
         isNotNull(apps.liveUrl),
       ),
     );
+}
+
+// Every app paired with its most recent status snapshot (DISTINCT ON app_id,
+// newest checked_at). Drives the dashboard.
+export async function getDashboardApps(): Promise<AppWithSnapshot[]> {
+  const [allApps, latestSnaps] = await Promise.all([
+    db.select().from(apps).orderBy(apps.name),
+    db
+      .selectDistinctOn([statusSnapshots.appId])
+      .from(statusSnapshots)
+      .orderBy(statusSnapshots.appId, desc(statusSnapshots.checkedAt)),
+  ]);
+  const byApp = new Map(latestSnaps.map((s) => [s.appId, s]));
+  return allApps.map((a) => ({ ...a, snapshot: byApp.get(a.id) ?? null }));
 }
