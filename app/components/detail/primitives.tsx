@@ -204,3 +204,11 @@ export function launchBtnStyle(accent: string): React.CSSProperties {
     gap: 8,
   };
 }
+
+export function Empty({ text }: { text: string }) {
+  return (
+    <div style={{ fontSize: 13, color: CC.MUTED_2, fontStyle: "italic", padding: "6px 0" }}>
+      {text}
+    </div>
+  );
+}
