@@ -3,8 +3,10 @@ import { and, desc, eq, isNotNull, ne } from "drizzle-orm";
 import { db } from "@/db/client";
 import { apps, statusSnapshots } from "@/db/schema";
 import type { App, StatusSnapshot } from "@/db/schema";
+import type { Issue } from "@/lib/derive";
 
 export type AppWithSnapshot = App & { snapshot: StatusSnapshot | null };
+export type DashboardApp = AppWithSnapshot & { issues: Issue[] };
 
 // Public showcase set: visible, not archived, has a live URL.
 // Mirrors the prototype filter in ui-showcase.jsx:6-8.
