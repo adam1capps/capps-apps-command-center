@@ -23,6 +23,19 @@ export async function getShowcaseApps(): Promise<App[]> {
     );
 }
 
+// One app by slug, paired with its most recent snapshot. null if not found.
+export async function getAppBySlug(slug: string): Promise<AppWithSnapshot | null> {
+  const [app] = await db.select().from(apps).where(eq(apps.slug, slug)).limit(1);
+  if (!app) return null;
+  const [snap] = await db
+    .select()
+    .from(statusSnapshots)
+    .where(eq(statusSnapshots.appId, app.id))
+    .orderBy(desc(statusSnapshots.checkedAt))
+    .limit(1);
+  return { ...app, snapshot: snap ?? null };
+}
+
 // Every app paired with its most recent status snapshot (DISTINCT ON app_id,
 // newest checked_at). Drives the dashboard.
 export async function getDashboardApps(): Promise<AppWithSnapshot[]> {

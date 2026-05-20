@@ -49,3 +49,14 @@ a { color: inherit; }
 
 /* selection */
 ::selection { background: #1E2C5520; color: #0F172A; }
+
+/* detail-page two-column rows collapse to one column on narrow viewports */
+.cc-detail-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+@media (max-width: 960px) {
+  .cc-detail-row { grid-template-columns: 1fr; }
+}
