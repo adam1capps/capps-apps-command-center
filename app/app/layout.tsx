@@ -26,7 +26,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${dmSans.variable} ${spaceMono.variable}`}>
       <body style={{ fontFamily: "var(--font-dm-sans), system-ui, sans-serif" }}>
-        <ClerkProvider>{children}</ClerkProvider>
+        <ClerkProvider
+          signInUrl="/sign-in"
+          signInFallbackRedirectUrl="/dashboard"
+        >
+          {children}
+        </ClerkProvider>
       </body>
     </html>
   );
