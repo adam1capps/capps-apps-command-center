@@ -12,10 +12,9 @@ import { HealthDot } from "@/components/shared/HealthDot";
 import { StagePill } from "@/components/shared/StagePill";
 import { ApiChip } from "@/components/shared/ApiChip";
 
-// Ported from prototype/ui-card.jsx:3-167. Read-only for Phase 5B: the
-// hover overlay shows next move + last deploy but is not editable yet
-// (Phase 8 wires the inline edit to a PATCH). Card click opens the detail
-// page (lands in Phase 7; 404 acceptable until then).
+// Ported from prototype/ui-card.jsx:3-167. The hover overlay shows last
+// deploy and an inline-editable next move (Phase 8B persists via PATCH).
+// Card click opens the detail page.
 export function AppCard({
   app,
   density = "comfortable",
@@ -25,10 +24,31 @@ export function AppCard({
 }) {
   const cat = CC.CATS[app.category as Category] ?? CC.CATS.internal;
   const [hover, setHover] = useState(false);
+  const [nextMove, setNextMove] = useState(app.nextMove ?? "");
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(app.nextMove ?? "");
   const router = useRouter();
   const compact = density === "compact";
   const snap = app.snapshot;
   const apis = app.apiDependencies;
+
+  const commitNextMove = async () => {
+    setEditing(false);
+    const next = draft.trim();
+    const prev = nextMove;
+    if (next === prev) return;
+    setNextMove(next); // optimistic
+    try {
+      const res = await fetch(`/api/apps/${app.slug}/next-move`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ value: next || null }),
+      });
+      if (!res.ok) throw new Error(String(res.status));
+    } catch {
+      setNextMove(prev); // rollback
+    }
+  };
 
   return (
     <div
@@ -206,17 +226,49 @@ export function AppCard({
               {snap?.urlResponseMs != null && <> · {snap.urlResponseMs}ms</>}
             </div>
           </div>
-          <div
-            style={{
-              fontSize: 13,
-              color: app.nextMove ? CC.INK : CC.MUTED_2,
-              lineHeight: 1.4,
-              fontStyle: app.nextMove ? "normal" : "italic",
-              padding: "2px 0",
-            }}
-          >
-            {app.nextMove || "no next move set"}
-          </div>
+          {editing ? (
+            <input
+              autoFocus
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") commitNextMove();
+                if (e.key === "Escape") {
+                  setDraft(nextMove);
+                  setEditing(false);
+                }
+              }}
+              onBlur={commitNextMove}
+              style={{
+                width: "100%",
+                padding: "6px 8px",
+                border: `1px solid ${cat.accent}`,
+                borderRadius: 6,
+                fontFamily: "inherit",
+                fontSize: 13,
+                outline: "none",
+                color: CC.INK,
+                background: "#fff",
+              }}
+            />
+          ) : (
+            <div
+              onClick={() => {
+                setDraft(nextMove);
+                setEditing(true);
+              }}
+              style={{
+                fontSize: 13,
+                color: nextMove ? CC.INK : CC.MUTED_2,
+                lineHeight: 1.4,
+                fontStyle: nextMove ? "normal" : "italic",
+                padding: "2px 0",
+                cursor: "text",
+              }}
+            >
+              {nextMove || "click to add next move"}
+            </div>
+          )}
         </div>
       )}
     </div>

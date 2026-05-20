@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { CC } from "@/lib/tokens";
 import type { Category } from "@/lib/tokens";
-import type { PlanItem } from "@/lib/intel";
+import type { PlanItem } from "@/db/schema";
 
 import { Card } from "./primitives";
 
@@ -22,20 +22,38 @@ function CheckGlyph({ color = "#fff" }: { color?: string }) {
   );
 }
 
-// Ported from prototype/ui-detail.jsx:196-244. Toggles are local-only in
-// Phase 7B (Phase 8B wires persistence to .cappshub/plan.json).
+// Ported from prototype/ui-detail.jsx:196-244; Phase 8B persists the whole
+// plan array via PATCH /api/apps/[slug]/plan, optimistic with rollback.
 export function PlanCard({
+  slug,
   category,
   plan,
 }: {
+  slug: string;
   category: string;
   plan: PlanItem[];
 }) {
   const cat = CC.CATS[category as Category] ?? CC.CATS.internal;
   const [items, setItems] = useState(plan);
+  const [error, setError] = useState(false);
 
-  const toggle = (id: string) =>
-    setItems((p) => p.map((x) => (x.id === id ? { ...x, done: !x.done } : x)));
+  const toggle = async (id: string) => {
+    const prev = items;
+    const next = items.map((x) => (x.id === id ? { ...x, done: !x.done } : x));
+    setItems(next); // optimistic
+    setError(false);
+    try {
+      const res = await fetch(`/api/apps/${slug}/plan`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ plan: next }),
+      });
+      if (!res.ok) throw new Error(String(res.status));
+    } catch {
+      setItems(prev); // rollback
+      setError(true);
+    }
+  };
 
   const done = items.filter((p) => p.done).length;
   const remaining = items.length - done;
@@ -48,10 +66,10 @@ export function PlanCard({
           style={{
             fontFamily: "var(--font-space-mono), monospace",
             fontSize: 11,
-            color: CC.MUTED,
+            color: error ? CC.H_BROKEN : CC.MUTED,
           }}
         >
-          {done}/{items.length} done
+          {error ? "save failed" : `${done}/${items.length} done`}
         </span>
       }
     >
