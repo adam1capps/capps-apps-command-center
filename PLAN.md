@@ -794,7 +794,11 @@ One adjustment from the brief's draft order: auth lands **before** the rich deta
 **Update this section after every merge.** Future agents and future-you read this first.
 
 ### Current phase
-**Phase 4 (Scheduled poller)** — Phase 3 showcase shipped (PRs #5 `a0f78d0`, #6 `9071620`). Next: Netlify Scheduled Function writing real status_snapshots per PLAN.md §Phase 4.
+**Phase 9 (Notes)** — Phases 1-8 fully shipped, plus Phase 9A (`notes` table + CRUD routes, PR #15 `9504380`). The temporary `/api/health/db` diagnostic from the production-500 incident has been removed (PR #19, merge `b9e563d`, 2026-05-21, SCP green). Next: **PR 9B** (NotesModal + NoteEditor + full-page note view), gated on the user applying `bundle-0002.sql` (the `notes` table) to Neon `production`.
+
+INCIDENT (2026-05-20, RESOLVED): production `/` was 500ing because `NETLIFY_DATABASE_URL` was never set on Netlify, so `db/client.ts` fell back to a dummy URL. Gotcha: secret Netlify env vars cannot use `context:"all"` (they silently no-op) and must be set per-context. Fixed by setting the pooled URL secret for `production` + `deploy-preview`, then redeploying.
+
+Open follow-ups (not blocking the live site): (1) apply `bundle-0002.sql` to Neon before 9B; (2) set 4 missing Netlify secrets per-context (`GITHUB_TOKEN`, `X_TRIGGER_TOKEN`, `CAPPSHUB_WEBHOOK_SECRET`, `CAPPSHUB_HOOK_TOKEN`) for the Phase 4 poller + Phases 11-12.
 
 ### Phase status
 
@@ -804,12 +808,12 @@ One adjustment from the brief's draft order: auth lands **before** the rich deta
 | 1 | Repo reshape + Next.js skeleton | done | PR 1: `c1ac76b` · PR 2: `5292d5d` (both merged 2026-05-19) | 2026-05-19 · green · `pnpm build` + `pnpm lint` pass locally; Netlify auto-deploy pending repo-link | — |
 | 2 | Neon schema + seed | done | PR #3 merged at `dfb9676` (2026-05-19) | 2026-05-19 · green · bundle SQL run via Neon SQL Editor: 37 apps, 37 snapshots, invoice-manager=broken | — |
 | 3 | Public showcase route | done | PR #5 `a0f78d0` (shell) · PR #6 `9071620` (grid) | 2026-05-20 · green · typecheck/lint/build pass; `/` dynamic, shell+grid render from live DB | — |
-| 4 | Scheduled poller | in-progress | — | — | poller verified only after deploy (no DB/GitHub egress locally) |
-| 5 | Clerk auth + Grid view | todo | — | — | — |
-| 6 | Pipeline + Needs Attention views | todo | — | — | — |
-| 7 | App detail page (read-mostly) | todo | — | — | — |
-| 8 | Editable next_move + plan + blockers | todo | — | — | — |
-| 9 | Notes modal + full-page editor | todo | — | — | — |
+| 4 | Scheduled poller | done | PR `b40fff6` | 2026-05-20 · green · build green | runtime poller verified only after deploy + the 4 missing Netlify secrets are set |
+| 5 | Clerk auth + Grid view | done | 5A `456d282` (keys live, user-verified) · 5B `baba767` | 2026-05-20 · green | — |
+| 6 | Pipeline + Needs Attention views | done | 6A `26d662c` | 2026-05-20 · green | — |
+| 7 | App detail page (read-mostly) | done | 7A `849df9f` · 7B `e9a14d4` · 7C `f054954` | 2026-05-20 · green | — |
+| 8 | Editable next_move + plan + blockers | done | 8A `fa0eef0` · 8B `1927424` | 2026-05-20 · green · `bundle-0001.sql` applied to Neon | — |
+| 9 | Notes modal + full-page editor | in-progress | 9A `9504380` (CRUD routes + table) | 2026-05-21 · green · health-endpoint cleanup `b9e563d` SCP green | 9B blocked on `bundle-0002.sql` applied to Neon |
 | 10 | `.cappshub/` GitHub Contents reads | todo | — | — | — |
 | 11 | GitHub webhook | todo | — | — | — |
 | 12 | `/api/cappshub-events` + SSE + SyncToast | todo | — | — | — |
