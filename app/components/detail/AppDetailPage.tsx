@@ -239,33 +239,41 @@ export function AppDetailPage({
               </button>
             </div>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               {recentNotes.map((n) => {
                 const m = KIND_META[n.kind as NoteKind] ?? KIND_META.note;
                 return (
-                  <div
+                  <Link
                     key={n.id}
+                    href={`/app/${app.slug}/notes/${n.id}`}
                     style={{
                       display: "flex",
                       gap: 10,
                       alignItems: "flex-start",
-                      padding: "8px 0",
-                      borderBottom: `1px solid ${CC.HAIR}`,
+                      background: "transparent",
+                      border: `1px solid ${CC.HAIR}`,
+                      borderRadius: 7,
+                      padding: "10px 12px",
+                      cursor: "pointer",
+                      fontFamily: "inherit",
+                      textAlign: "left",
+                      textDecoration: "none",
                     }}
                   >
                     <span
                       style={{
                         fontFamily: "var(--font-space-mono), monospace",
-                        fontSize: 9,
+                        fontSize: 9.5,
                         fontWeight: 700,
                         color: m.color,
                         background: m.tint,
-                        padding: "2px 5px",
-                        borderRadius: 3,
+                        padding: "2px 6px",
+                        borderRadius: 4,
                         textTransform: "uppercase",
                         letterSpacing: ".05em",
                         flex: "none",
                         marginTop: 2,
+                        whiteSpace: "nowrap",
                       }}
                     >
                       {m.label}
@@ -274,7 +282,7 @@ export function AppDetailPage({
                       <div
                         style={{
                           fontWeight: 600,
-                          fontSize: 13,
+                          fontSize: 13.5,
                           color: CC.INK,
                           overflow: "hidden",
                           textOverflow: "ellipsis",
@@ -283,43 +291,36 @@ export function AppDetailPage({
                       >
                         {n.title}
                       </div>
-                      {n.body && (
-                        <div
-                          style={{
-                            fontSize: 12,
-                            color: CC.MUTED,
-                            marginTop: 2,
-                            lineHeight: 1.4,
-                            display: "-webkit-box",
-                            WebkitLineClamp: 1,
-                            WebkitBoxOrient: "vertical",
-                            overflow: "hidden",
-                          }}
-                        >
-                          {n.body}
-                        </div>
-                      )}
+                      <div
+                        style={{
+                          fontSize: 12.5,
+                          color: CC.MUTED,
+                          marginTop: 2,
+                          lineHeight: 1.4,
+                          display: "-webkit-box",
+                          WebkitLineClamp: 1,
+                          WebkitBoxOrient: "vertical",
+                          overflow: "hidden",
+                        }}
+                      >
+                        {n.body || "(empty)"}
+                      </div>
                     </div>
-                  </div>
+                  </Link>
                 );
               })}
               {localNotesCount > recentNotes.length && (
-                <button
-                  onClick={() => setShowNotes(true)}
+                <div
                   style={{
-                    background: "none",
-                    border: "none",
-                    color: cat.primary,
-                    cursor: "pointer",
-                    fontFamily: "inherit",
-                    fontSize: 12.5,
-                    fontWeight: 600,
-                    padding: "4px 0 0",
-                    textAlign: "left",
+                    fontFamily: "var(--font-space-mono), monospace",
+                    fontSize: 11,
+                    color: CC.MUTED_2,
+                    textAlign: "center",
+                    padding: "4px 0",
                   }}
                 >
-                  View all {localNotesCount} notes ↗
-                </button>
+                  + {localNotesCount - recentNotes.length} more
+                </div>
               )}
             </div>
           )}
