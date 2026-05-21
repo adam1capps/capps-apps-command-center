@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, integer, boolean, timestamp, jsonb, check } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, integer, boolean, timestamp, jsonb, check, unique } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
 export interface PlanItem {
@@ -77,6 +77,24 @@ export const notes = pgTable(
   (t) => [check("notes_kind_check", sql`${t.kind} in ('instruction', 'note')`)],
 );
 
+// Cache of `.cappshub/*` + CLAUDE.md files read from each managed repo via the
+// GitHub Contents API (Phase 10). content is null when the file is absent (404),
+// so misses are cached too. Freshness is checked against fetched_at (5 min).
+export const notesCache = pgTable(
+  "notes_cache",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    appId: uuid("app_id")
+      .notNull()
+      .references(() => apps.id, { onDelete: "cascade" }),
+    repoPath: text("repo_path").notNull(),
+    content: text("content"),
+    sha: text("sha"),
+    fetchedAt: timestamp("fetched_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [unique("notes_cache_app_repo_unique").on(t.appId, t.repoPath)],
+);
+
 export type App = typeof apps.$inferSelect;
 export type NewApp = typeof apps.$inferInsert;
 export type StatusSnapshot = typeof statusSnapshots.$inferSelect;
@@ -84,3 +102,5 @@ export type NewStatusSnapshot = typeof statusSnapshots.$inferInsert;
 export type ChangeLogEntry = typeof changeLog.$inferSelect;
 export type Note = typeof notes.$inferSelect;
 export type NewNote = typeof notes.$inferInsert;
+export type NoteCache = typeof notesCache.$inferSelect;
+export type NewNoteCache = typeof notesCache.$inferInsert;
