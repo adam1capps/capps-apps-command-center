@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 
 import { AppDetailPage } from "@/components/detail/AppDetailPage";
 import { toNoteUI } from "@/components/notes/meta";
+import { getIntegrationFor } from "@/lib/cappshub";
 import { getAppBySlug, getNotesForApp } from "@/lib/db-queries";
 import { getIssues } from "@/lib/derive";
 import { intelFor } from "@/lib/intel";
@@ -37,7 +38,10 @@ export default async function AppDetailRoute({
     urlStatus: app.snapshot?.urlStatus ?? null,
   });
 
-  const notes = (await getNotesForApp(app.id)).map(toNoteUI);
+  const [notes, integration] = await Promise.all([
+    getNotesForApp(app.id).then((rows) => rows.map(toNoteUI)),
+    getIntegrationFor(app.slug),
+  ]);
 
   return (
     <AppDetailPage
@@ -46,6 +50,7 @@ export default async function AppDetailRoute({
       issues={issues}
       intel={intel}
       notes={notes}
+      integration={integration}
     />
   );
 }
