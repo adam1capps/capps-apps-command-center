@@ -131,6 +131,9 @@ export async function listNotesFor(slug: string): Promise<NotesRead> {
       return { status: "missing" };
     }
     paths = data.filter((e) => e.type === "file" && e.name.endsWith(".md")).map((e) => e.path);
+    // Note files are ISO-timestamp-prefixed by the /note convention, so sorting
+    // descending puts the newest first — the card labels index 0 "latest".
+    paths.sort().reverse();
     await upsertCache(app.appId, NOTES_DIR, JSON.stringify(paths), null);
   }
 
