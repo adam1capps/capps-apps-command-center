@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
 
 import { AppDetailPage } from "@/components/detail/AppDetailPage";
-import { getAppBySlug } from "@/lib/db-queries";
+import { toNoteUI } from "@/components/notes/meta";
+import { getAppBySlug, getNotesForApp } from "@/lib/db-queries";
 import { getIssues } from "@/lib/derive";
 import { intelFor } from "@/lib/intel";
 import type { Stage } from "@/lib/tokens";
@@ -36,8 +37,16 @@ export default async function AppDetailRoute({
     urlStatus: app.snapshot?.urlStatus ?? null,
   });
 
+  const notes = (await getNotesForApp(app.id)).map(toNoteUI);
+
   return (
-    <AppDetailPage app={app} snapshot={app.snapshot} issues={issues} intel={intel} />
+    <AppDetailPage
+      app={app}
+      snapshot={app.snapshot}
+      issues={issues}
+      intel={intel}
+      notes={notes}
+    />
   );
 }
 

@@ -2,12 +2,15 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
+import { NotesButton } from "@/components/notes/NotesButton";
+import { NotesModal } from "@/components/notes/NotesModal";
+import { KIND_META, formatStamp, toNoteUI, type NoteUI } from "@/components/notes/meta";
 import { CATEGORIES } from "@/lib/constants";
 import { CC } from "@/lib/tokens";
 import type { Category } from "@/lib/tokens";
-import type { App, StatusSnapshot } from "@/db/schema";
+import type { App, Note, StatusSnapshot } from "@/db/schema";
 import type { Issue } from "@/lib/derive";
 import type { AppIntel } from "@/lib/intel";
 
@@ -37,22 +40,63 @@ export function AppDetailPage({
   snapshot,
   issues,
   intel,
+  notes: initialNotes,
 }: {
   app: App;
   snapshot: StatusSnapshot | null;
   issues: Issue[];
   intel: AppIntel;
+  notes: NoteUI[];
 }) {
   const cat = CC.CATS[app.category as Category] ?? CC.CATS.internal;
   const router = useRouter();
 
+  const [notes, setNotes] = useState<NoteUI[]>(initialNotes);
+  const [notesOpen, setNotesOpen] = useState(false);
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") router.push("/dashboard");
+      if (e.key === "Escape" && !notesOpen) router.push("/dashboard");
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [router]);
+  }, [router, notesOpen]);
+
+  const createNote = async (draft: { kind: NoteUI["kind"]; title: string; body: string }) => {
+    const res = await fetch(`/api/apps/${app.slug}/notes`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(draft),
+    });
+    if (!res.ok) throw new Error(String(res.status));
+    const created = toNoteUI((await res.json()) as Note);
+    setNotes((prev) => [created, ...prev]);
+    return created;
+  };
+
+  const updateNote = async (
+    id: string,
+    draft: { kind: NoteUI["kind"]; title: string; body: string },
+  ) => {
+    const res = await fetch(`/api/notes/${id}`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(draft),
+    });
+    if (!res.ok) throw new Error(String(res.status));
+    const updated = toNoteUI((await res.json()) as Note);
+    setNotes((prev) =>
+      [updated, ...prev.filter((n) => n.id !== id)].sort((a, b) =>
+        b.updatedAt.localeCompare(a.updatedAt),
+      ),
+    );
+  };
+
+  const deleteNote = async (id: string) => {
+    const res = await fetch(`/api/notes/${id}`, { method: "DELETE" });
+    if (!res.ok) throw new Error(String(res.status));
+    setNotes((prev) => prev.filter((n) => n.id !== id));
+  };
 
   return (
     <div style={{ minHeight: "100vh", background: CC.SURFACE_2, animation: "ccFade .14s ease-out" }}>
@@ -98,6 +142,7 @@ export function AppDetailPage({
           </div>
 
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <NotesButton count={notes.length} onOpen={() => setNotesOpen(true)} />
             {app.githubRepo && (
               <a
                 href={`https://github.com/${app.githubRepo}`}
@@ -143,6 +188,114 @@ export function AppDetailPage({
           <NextMoveCard app={app} />
           <PlanCard slug={app.slug} category={app.category} plan={app.plan ?? intel.plan} />
         </Row>
+
+        <div style={{ marginBottom: 18 }}>
+          <Card
+            title="Notes & instructions"
+            right={
+              <button
+                onClick={() => setNotesOpen(true)}
+                style={{
+                  background: "transparent",
+                  border: `1px solid ${CC.HAIR}`,
+                  color: CC.INK,
+                  padding: "4px 10px",
+                  borderRadius: 6,
+                  fontFamily: "inherit",
+                  fontSize: 11.5,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                }}
+              >
+                {notes.length ? "Manage" : "Add"}
+              </button>
+            }
+          >
+            {notes.length === 0 ? (
+              <div style={{ fontSize: 13, color: CC.MUTED_2, fontStyle: "italic", padding: "4px 0" }}>
+                No notes or instructions yet for this app.
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                {notes.slice(0, 4).map((n) => {
+                  const meta = KIND_META[n.kind] ?? KIND_META.note;
+                  return (
+                    <Link
+                      key={n.id}
+                      href={`/app/${app.slug}/notes/${n.id}`}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 10,
+                        padding: "8px 4px",
+                        borderBottom: `1px solid ${CC.HAIR_2}`,
+                        textDecoration: "none",
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontFamily: "var(--font-space-mono), monospace",
+                          fontSize: 9,
+                          fontWeight: 700,
+                          color: meta.color,
+                          background: meta.tint,
+                          padding: "2px 6px",
+                          borderRadius: 4,
+                          textTransform: "uppercase",
+                          letterSpacing: ".05em",
+                          flex: "none",
+                        }}
+                      >
+                        {meta.label}
+                      </span>
+                      <span
+                        style={{
+                          flex: 1,
+                          minWidth: 0,
+                          fontSize: 13,
+                          fontWeight: 600,
+                          color: CC.INK,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {n.title}
+                      </span>
+                      <span
+                        style={{
+                          fontFamily: "var(--font-space-mono), monospace",
+                          fontSize: 10,
+                          color: CC.MUTED_2,
+                          flex: "none",
+                        }}
+                      >
+                        {formatStamp(n.updatedAt || n.createdAt)}
+                      </span>
+                    </Link>
+                  );
+                })}
+                {notes.length > 4 && (
+                  <button
+                    onClick={() => setNotesOpen(true)}
+                    style={{
+                      background: "transparent",
+                      border: "none",
+                      color: CC.MUTED,
+                      fontFamily: "var(--font-space-mono), monospace",
+                      fontSize: 10.5,
+                      cursor: "pointer",
+                      padding: "8px 4px 0",
+                      textAlign: "left",
+                    }}
+                  >
+                    + {notes.length - 4} more
+                  </button>
+                )}
+              </div>
+            )}
+          </Card>
+        </div>
 
         <Row>
           <Card title="Activity">
@@ -200,6 +353,18 @@ export function AppDetailPage({
           </Card>
         </Row>
       </div>
+
+      {notesOpen && (
+        <NotesModal
+          app={app}
+          notes={notes}
+          onClose={() => setNotesOpen(false)}
+          onCreate={createNote}
+          onUpdate={updateNote}
+          onDelete={deleteNote}
+          onOpenFull={(noteId) => router.push(`/app/${app.slug}/notes/${noteId}`)}
+        />
+      )}
     </div>
   );
 }
