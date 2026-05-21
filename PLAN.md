@@ -794,7 +794,7 @@ One adjustment from the brief's draft order: auth lands **before** the rich deta
 **Update this section after every merge.** Future agents and future-you read this first.
 
 ### Current phase
-**Phase 10 (`.cappshub/` GitHub Contents reads)** — Phase 9 is fully shipped: 9A (`notes` table + CRUD routes, PR #15 `9504380`) and 9B (NotesButton + NotesModal + inline editor + full-page note editor at `/app/[slug]/notes/[noteId]` + detail-page preview, PR #23 merge `4125197`, 2026-05-21, SCP green). `bundle-0002.sql` applied to Neon `production` (user-confirmed). The temporary `/api/health/db` diagnostic was removed (PR #19 `b9e563d`). Next: **PR 10A** (`notes_cache` table + `github.ts` Contents wrapper + `cappshub.ts`).
+**Phase 10 (`.cappshub/` GitHub Contents reads)** — 10A shipped (PR #27 merge `c2f50fd`, 2026-05-21): `notes_cache` table + `bundle-0003.sql`, `github.ts` `getRepoContents`/`listDirContents`, and `cappshub.ts` cache-aware reads (5-min freshness, miss-caching). Phase 9 fully shipped before it. Next: **PR 10B** — wire `IntegrationCard` (4 tabs: instructions/plan/notes/CLAUDE.md) to the cappshub reads, plan card prefers `.cappshub/plan.json`. Gated for live data on `bundle-0003.sql` applied to Neon + repos actually having `.cappshub/` files (else empty states, which is expected).
 
 INCIDENT (2026-05-20, RESOLVED): production `/` was 500ing because `NETLIFY_DATABASE_URL` was never set on Netlify, so `db/client.ts` fell back to a dummy URL. Gotcha: secret Netlify env vars cannot use `context:"all"` (they silently no-op) and must be set per-context. Fixed by setting the pooled URL secret for `production` + `deploy-preview`, then redeploying.
 
@@ -816,7 +816,7 @@ SCP 2026-05-21T20:39Z · green · `implement-command-center` @ `6359602`: instal
 | 7 | App detail page (read-mostly) | done | 7A `849df9f` · 7B `e9a14d4` · 7C `f054954` | 2026-05-20 · green | — |
 | 8 | Editable next_move + plan + blockers | done | 8A `fa0eef0` · 8B `1927424` | 2026-05-20 · green · `bundle-0001.sql` applied to Neon | — |
 | 9 | Notes modal + full-page editor | done | 9A `9504380` (CRUD + table) · 9B `4125197` (modal + editor + full-page + preview) | 2026-05-21T20:39Z · green · build gate green; live showcase renders from DB; deploy `ready`, site public | authed notes CRUD/autosave still want a live click-through |
-| 10 | `.cappshub/` GitHub Contents reads | todo | — | — | — |
+| 10 | `.cappshub/` GitHub Contents reads | in-progress | 10A `c2f50fd` (notes_cache + github.ts + cappshub.ts) | 2026-05-21T20:58Z · green · build gate green | 10B (IntegrationCard UI) pending; `bundle-0003.sql` to apply in Neon |
 | 11 | GitHub webhook | todo | — | — | — |
 | 12 | `/api/cappshub-events` + SSE + SyncToast | todo | — | — | — |
 | 13 | Slash command docs + dogfood | todo | — | — | — |
