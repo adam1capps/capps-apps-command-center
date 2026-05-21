@@ -794,11 +794,11 @@ One adjustment from the brief's draft order: auth lands **before** the rich deta
 **Update this section after every merge.** Future agents and future-you read this first.
 
 ### Current phase
-**Phase 9 (Notes)** — Phases 1-8 fully shipped, plus Phase 9A (`notes` table + CRUD routes, PR #15 `9504380`). The temporary `/api/health/db` diagnostic from the production-500 incident has been removed (PR #19, merge `b9e563d`, 2026-05-21, SCP green). Next: **PR 9B** (NotesModal + NoteEditor + full-page note view), gated on the user applying `bundle-0002.sql` (the `notes` table) to Neon `production`.
+**Phase 10 (`.cappshub/` GitHub Contents reads)** — Phase 9 is fully shipped: 9A (`notes` table + CRUD routes, PR #15 `9504380`) and 9B (NotesButton + NotesModal + inline editor + full-page note editor at `/app/[slug]/notes/[noteId]` + detail-page preview, PR #23 merge `4125197`, 2026-05-21, SCP green). `bundle-0002.sql` applied to Neon `production` (user-confirmed). The temporary `/api/health/db` diagnostic was removed (PR #19 `b9e563d`). Next: **PR 10A** (`notes_cache` table + `github.ts` Contents wrapper + `cappshub.ts`).
 
 INCIDENT (2026-05-20, RESOLVED): production `/` was 500ing because `NETLIFY_DATABASE_URL` was never set on Netlify, so `db/client.ts` fell back to a dummy URL. Gotcha: secret Netlify env vars cannot use `context:"all"` (they silently no-op) and must be set per-context. Fixed by setting the pooled URL secret for `production` + `deploy-preview`, then redeploying.
 
-Open follow-ups (not blocking the live site): (1) apply `bundle-0002.sql` to Neon before 9B; (2) set 4 missing Netlify secrets per-context (`GITHUB_TOKEN`, `X_TRIGGER_TOKEN`, `CAPPSHUB_WEBHOOK_SECRET`, `CAPPSHUB_HOOK_TOKEN`) for the Phase 4 poller + Phases 11-12.
+Open follow-ups (not blocking the live site): set 4 missing Netlify secrets per-context (`GITHUB_TOKEN`, `X_TRIGGER_TOKEN`, `CAPPSHUB_WEBHOOK_SECRET`, `CAPPSHUB_HOOK_TOKEN`) for the Phase 4 poller + Phases 11-12. Runtime-verification debt: the notes CRUD/autosave flows are built + merged but not yet eyeballed against live data (worth a pass through `/app/[slug]` and the notes modal on production).
 
 ### Phase status
 
@@ -813,7 +813,7 @@ Open follow-ups (not blocking the live site): (1) apply `bundle-0002.sql` to Neo
 | 6 | Pipeline + Needs Attention views | done | 6A `26d662c` | 2026-05-20 · green | — |
 | 7 | App detail page (read-mostly) | done | 7A `849df9f` · 7B `e9a14d4` · 7C `f054954` | 2026-05-20 · green | — |
 | 8 | Editable next_move + plan + blockers | done | 8A `fa0eef0` · 8B `1927424` | 2026-05-20 · green · `bundle-0001.sql` applied to Neon | — |
-| 9 | Notes modal + full-page editor | in-progress | 9A `9504380` (CRUD routes + table) | 2026-05-21 · green · health-endpoint cleanup `b9e563d` SCP green | 9B blocked on `bundle-0002.sql` applied to Neon |
+| 9 | Notes modal + full-page editor | done | 9A `9504380` (CRUD + table) · 9B `4125197` (modal + editor + full-page + preview) | 2026-05-21 · green · typecheck/lint/build pass; `bundle-0002.sql` applied to Neon | runtime CRUD/autosave not yet eyeballed live |
 | 10 | `.cappshub/` GitHub Contents reads | todo | — | — | — |
 | 11 | GitHub webhook | todo | — | — | — |
 | 12 | `/api/cappshub-events` + SSE + SyncToast | todo | — | — | — |
