@@ -1,11 +1,11 @@
-import { and, desc, eq, isNotNull, ne } from "drizzle-orm";
+import { and, count, desc, eq, isNotNull, ne } from "drizzle-orm";
 
 import { db } from "@/db/client";
-import { apps, statusSnapshots } from "@/db/schema";
+import { apps, notes, statusSnapshots } from "@/db/schema";
 import type { App, StatusSnapshot } from "@/db/schema";
 import type { Issue } from "@/lib/derive";
 
-export type AppWithSnapshot = App & { snapshot: StatusSnapshot | null };
+export type AppWithSnapshot = App & { snapshot: StatusSnapshot | null; notesCount: number };
 export type DashboardApp = AppWithSnapshot & { issues: Issue[] };
 
 // Public showcase set: visible, not archived, has a live URL.
@@ -33,19 +33,29 @@ export async function getAppBySlug(slug: string): Promise<AppWithSnapshot | null
     .where(eq(statusSnapshots.appId, app.id))
     .orderBy(desc(statusSnapshots.checkedAt))
     .limit(1);
-  return { ...app, snapshot: snap ?? null };
+  const [nc] = await db
+    .select({ count: count() })
+    .from(notes)
+    .where(eq(notes.appId, app.id));
+  return { ...app, snapshot: snap ?? null, notesCount: Number(nc?.count ?? 0) };
 }
 
 // Every app paired with its most recent status snapshot (DISTINCT ON app_id,
 // newest checked_at). Drives the dashboard.
 export async function getDashboardApps(): Promise<AppWithSnapshot[]> {
-  const [allApps, latestSnaps] = await Promise.all([
+  const [allApps, latestSnaps, noteCounts] = await Promise.all([
     db.select().from(apps).orderBy(apps.name),
     db
       .selectDistinctOn([statusSnapshots.appId])
       .from(statusSnapshots)
       .orderBy(statusSnapshots.appId, desc(statusSnapshots.checkedAt)),
+    db.select({ appId: notes.appId, count: count() }).from(notes).groupBy(notes.appId),
   ]);
   const byApp = new Map(latestSnaps.map((s) => [s.appId, s]));
-  return allApps.map((a) => ({ ...a, snapshot: byApp.get(a.id) ?? null }));
+  const countByApp = new Map(noteCounts.map((n) => [n.appId, Number(n.count)]));
+  return allApps.map((a) => ({
+    ...a,
+    snapshot: byApp.get(a.id) ?? null,
+    notesCount: countByApp.get(a.id) ?? 0,
+  }));
 }

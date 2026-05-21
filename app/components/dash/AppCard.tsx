@@ -11,6 +11,8 @@ import type { Category } from "@/lib/tokens";
 import { HealthDot } from "@/components/shared/HealthDot";
 import { StagePill } from "@/components/shared/StagePill";
 import { ApiChip } from "@/components/shared/ApiChip";
+import { NotesButton } from "@/components/notes/NotesButton";
+import { NotesModal } from "@/components/notes/NotesModal";
 
 // Ported from prototype/ui-card.jsx:3-167. The hover overlay shows last
 // deploy and an inline-editable next move (Phase 8B persists via PATCH).
@@ -27,6 +29,8 @@ export function AppCard({
   const [nextMove, setNextMove] = useState(app.nextMove ?? "");
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(app.nextMove ?? "");
+  const [notesCount, setNotesCount] = useState(app.notesCount);
+  const [showNotes, setShowNotes] = useState(false);
   const router = useRouter();
   const compact = density === "compact";
   const snap = app.snapshot;
@@ -151,32 +155,34 @@ export function AppCard({
               {app.liveUrl ? shortHost(app.liveUrl) : "no live url"}
             </div>
           </div>
-          {apis.length > 0 && (
-            <div
-              style={{
-                display: "flex",
-                gap: 4,
-                flexWrap: "wrap",
-                justifyContent: "flex-end",
-              }}
-            >
-              {apis.slice(0, 4).map((a) => (
-                <ApiChip key={a} name={a} />
-              ))}
-              {apis.length > 4 && (
-                <span
-                  style={{
-                    fontSize: 10.5,
-                    color: CC.MUTED_2,
-                    fontFamily: "var(--font-space-mono), monospace",
-                  }}
-                >
-                  +{apis.length - 4}
-                </span>
-              )}
-            </div>
-          )}
+          <div style={{ display: "flex", gap: 4, flexWrap: "wrap", justifyContent: "flex-end", alignItems: "center" }}>
+            <NotesButton count={notesCount} onOpen={() => setShowNotes(true)} />
+            {apis.slice(0, 3).map((a) => (
+              <ApiChip key={a} name={a} />
+            ))}
+            {apis.length > 3 && (
+              <span
+                style={{
+                  fontSize: 10.5,
+                  color: CC.MUTED_2,
+                  fontFamily: "var(--font-space-mono), monospace",
+                }}
+              >
+                +{apis.length - 3}
+              </span>
+            )}
+          </div>
         </div>
+      )}
+
+      {showNotes && (
+        <NotesModal
+          app={{ slug: app.slug, name: app.name, category: app.category }}
+          onClose={(finalCount) => {
+            setShowNotes(false);
+            setNotesCount(finalCount);
+          }}
+        />
       )}
 
       {!compact && hover && (
