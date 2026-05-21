@@ -798,7 +798,9 @@ One adjustment from the brief's draft order: auth lands **before** the rich deta
 
 INCIDENT (2026-05-20, RESOLVED): production `/` was 500ing because `NETLIFY_DATABASE_URL` was never set on Netlify, so `db/client.ts` fell back to a dummy URL. Gotcha: secret Netlify env vars cannot use `context:"all"` (they silently no-op) and must be set per-context. Fixed by setting the pooled URL secret for `production` + `deploy-preview`, then redeploying.
 
-Open follow-ups (not blocking the live site): set 4 missing Netlify secrets per-context (`GITHUB_TOKEN`, `X_TRIGGER_TOKEN`, `CAPPSHUB_WEBHOOK_SECRET`, `CAPPSHUB_HOOK_TOKEN`) for the Phase 4 poller + Phases 11-12. Runtime-verification debt: the notes CRUD/autosave flows are built + merged but not yet eyeballed against live data (worth a pass through `/app/[slug]` and the notes modal on production).
+Open follow-ups (not blocking the live site): set 4 missing Netlify secrets per-context (`GITHUB_TOKEN`, `X_TRIGGER_TOKEN`, `CAPPSHUB_WEBHOOK_SECRET`, `CAPPSHUB_HOOK_TOKEN`) for the Phase 4 poller + Phases 11-12. Runtime-verification debt: the public showcase `/` is confirmed live (cards render from the DB at `hub.cappsapps.ai`, 2026-05-21), but the authenticated notes CRUD/autosave flows still want a click-through pass on `/app/[slug]`.
+
+SCP 2026-05-21T20:39Z · green · `implement-command-center` @ `6359602`: install/typecheck/lint/build all pass; Netlify current deploy `ready`; site public (no password/SSO gate); showcase `/` renders live DB data (user-confirmed). Sandbox cannot reach the open internet (egress policy) so live checks are via the Netlify MCP + user eyeball, not local curl.
 
 ### Phase status
 
@@ -813,7 +815,7 @@ Open follow-ups (not blocking the live site): set 4 missing Netlify secrets per-
 | 6 | Pipeline + Needs Attention views | done | 6A `26d662c` | 2026-05-20 · green | — |
 | 7 | App detail page (read-mostly) | done | 7A `849df9f` · 7B `e9a14d4` · 7C `f054954` | 2026-05-20 · green | — |
 | 8 | Editable next_move + plan + blockers | done | 8A `fa0eef0` · 8B `1927424` | 2026-05-20 · green · `bundle-0001.sql` applied to Neon | — |
-| 9 | Notes modal + full-page editor | done | 9A `9504380` (CRUD + table) · 9B `4125197` (modal + editor + full-page + preview) | 2026-05-21 · green · typecheck/lint/build pass; `bundle-0002.sql` applied to Neon | runtime CRUD/autosave not yet eyeballed live |
+| 9 | Notes modal + full-page editor | done | 9A `9504380` (CRUD + table) · 9B `4125197` (modal + editor + full-page + preview) | 2026-05-21T20:39Z · green · build gate green; live showcase renders from DB; deploy `ready`, site public | authed notes CRUD/autosave still want a live click-through |
 | 10 | `.cappshub/` GitHub Contents reads | todo | — | — | — |
 | 11 | GitHub webhook | todo | — | — | — |
 | 12 | `/api/cappshub-events` + SSE + SyncToast | todo | — | — | — |
