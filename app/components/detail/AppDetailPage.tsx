@@ -13,6 +13,9 @@ import type { Category } from "@/lib/tokens";
 import type { App, Note, StatusSnapshot } from "@/db/schema";
 import type { Issue } from "@/lib/derive";
 import type { AppIntel } from "@/lib/intel";
+import type { IntegrationData } from "@/lib/cappshub";
+
+import { IntegrationCard } from "./IntegrationCard";
 
 import {
   Card,
@@ -41,12 +44,14 @@ export function AppDetailPage({
   issues,
   intel,
   notes: initialNotes,
+  integration,
 }: {
   app: App;
   snapshot: StatusSnapshot | null;
   issues: Issue[];
   intel: AppIntel;
   notes: NoteUI[];
+  integration: IntegrationData;
 }) {
   const cat = CC.CATS[app.category as Category] ?? CC.CATS.internal;
   const router = useRouter();
@@ -186,7 +191,12 @@ export function AppDetailPage({
 
         <Row>
           <NextMoveCard app={app} />
-          <PlanCard slug={app.slug} category={app.category} plan={app.plan ?? intel.plan} />
+          <PlanCard
+            slug={app.slug}
+            category={app.category}
+            plan={integration.planItems ?? app.plan ?? intel.plan}
+            synced={!!integration.planItems}
+          />
         </Row>
 
         <div style={{ marginBottom: 18 }}>
@@ -294,6 +304,12 @@ export function AppDetailPage({
                 )}
               </div>
             )}
+          </Card>
+        </div>
+
+        <div style={{ marginBottom: 18 }}>
+          <Card title="Claude Code · .cappshub/">
+            <IntegrationCard integration={integration} />
           </Card>
         </div>
 

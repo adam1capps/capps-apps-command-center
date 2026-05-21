@@ -28,10 +28,12 @@ export function PlanCard({
   slug,
   category,
   plan,
+  synced,
 }: {
   slug: string;
   category: string;
   plan: PlanItem[];
+  synced?: boolean;
 }) {
   const cat = CC.CATS[category as Category] ?? CC.CATS.internal;
   const [items, setItems] = useState(plan);
@@ -73,6 +75,19 @@ export function PlanCard({
         </span>
       }
     >
+      {synced && (
+        <div
+          style={{
+            fontFamily: "var(--font-space-mono), monospace",
+            fontSize: 10,
+            color: CC.MUTED_2,
+            marginBottom: 8,
+            letterSpacing: ".04em",
+          }}
+        >
+          synced from .cappshub/plan.json
+        </div>
+      )}
       <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
         {items.map((p) => (
           <div

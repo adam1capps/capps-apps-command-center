@@ -141,3 +141,64 @@ export async function listNotesFor(slug: string): Promise<NotesRead> {
   }
   return { status: "ok", notes };
 }
+
+// Everything the detail-page IntegrationCard needs, in one resolve + parallel
+// fetch. `null` fields mean the file is absent (404) or there is no repo.
+export interface IntegrationData {
+  repo: string | null;
+  connected: boolean;
+  instructions: string | null;
+  planJson: string | null;
+  planItems: PlanItem[] | null;
+  claudeMd: string | null;
+  notes: { path: string; content: string }[];
+  hasCappshub: boolean;
+}
+
+export async function getIntegrationFor(slug: string): Promise<IntegrationData> {
+  const app = await resolveApp(slug);
+  if (!app) {
+    return {
+      repo: null,
+      connected: false,
+      instructions: null,
+      planJson: null,
+      planItems: null,
+      claudeMd: null,
+      notes: [],
+      hasCappshub: false,
+    };
+  }
+
+  const [instr, planRead, claude, notesRead] = await Promise.all([
+    readCachedFor(app.appId, app.repo, ".cappshub/instructions.md"),
+    readCachedFor(app.appId, app.repo, ".cappshub/plan.json"),
+    readCachedFor(app.appId, app.repo, "CLAUDE.md"),
+    listNotesFor(slug),
+  ]);
+
+  const instructions = instr.status === "ok" ? instr.content : null;
+  const planJson = planRead.status === "ok" ? planRead.content : null;
+  let planItems: PlanItem[] | null = null;
+  if (planJson) {
+    try {
+      const parsed = JSON.parse(planJson) as { items?: unknown };
+      if (Array.isArray(parsed.items)) planItems = parsed.items as PlanItem[];
+    } catch {
+      planItems = null;
+    }
+  }
+  const claudeMd = claude.status === "ok" ? claude.content : null;
+  const notes = notesRead.status === "ok" ? notesRead.notes : [];
+
+  return {
+    repo: app.repo,
+    connected: true,
+    instructions,
+    planJson,
+    planItems,
+    claudeMd,
+    notes,
+    hasCappshub: instructions != null || planJson != null || notes.length > 0,
+  };
+}
