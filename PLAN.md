@@ -800,6 +800,8 @@ INCIDENT (2026-05-20, RESOLVED): production `/` was 500ing because `NETLIFY_DATA
 
 Open follow-ups (not blocking the live site): set 4 missing Netlify secrets per-context (`GITHUB_TOKEN`, `X_TRIGGER_TOKEN`, `CAPPSHUB_WEBHOOK_SECRET`, `CAPPSHUB_HOOK_TOKEN`) for the Phase 4 poller + Phases 11-12. Runtime-verification debt: the public showcase `/` is confirmed live (cards render from the DB at `hub.cappsapps.ai`, 2026-05-21), but the authenticated notes CRUD/autosave flows still want a click-through pass on `/app/[slug]`.
 
+SCP 2026-05-21T23:25Z · green · `implement-command-center` @ `37fbd39` (PR #30): note-sort follow-up to 10B (`.cappshub/notes` sorted newest-first so the IntegrationCard "latest" badge is correct). install/typecheck/lint/build all pass; Netlify current deploy `6a0f9848` `ready`; site public. Populated-repo path (tabs/notes-nav/plan label) still dark on the live deploy: no managed repo has `.cappshub/` committed; dogfood files for `adam1capps/hub-dispatch` (slug `hub-app`) prepared and handed to the user.
+
 SCP 2026-05-21T22:00Z · green · `implement-command-center` @ `b82af64` (PR #29 / Phase 10B): install/typecheck/lint/build all pass; Netlify current deploy `6a0f8222` `ready`; site public; no em dashes in new copy. Runtime of the IntegrationCard not eyeballed from sandbox (no egress) — handed the user a Phase-10B smoke test for the deploy preview / production.
 
 SCP 2026-05-21T20:39Z · green · `implement-command-center` @ `6359602`: install/typecheck/lint/build all pass; Netlify current deploy `ready`; site public (no password/SSO gate); showcase `/` renders live DB data (user-confirmed). Sandbox cannot reach the open internet (egress policy) so live checks are via the Netlify MCP + user eyeball, not local curl.
@@ -818,7 +820,7 @@ SCP 2026-05-21T20:39Z · green · `implement-command-center` @ `6359602`: instal
 | 7 | App detail page (read-mostly) | done | 7A `849df9f` · 7B `e9a14d4` · 7C `f054954` | 2026-05-20 · green | — |
 | 8 | Editable next_move + plan + blockers | done | 8A `fa0eef0` · 8B `1927424` | 2026-05-20 · green · `bundle-0001.sql` applied to Neon | — |
 | 9 | Notes modal + full-page editor | done | 9A `9504380` (CRUD + table) · 9B `4125197` (modal + editor + full-page + preview) | 2026-05-21T20:39Z · green · build gate green; live showcase renders from DB; deploy `ready`, site public | authed notes CRUD/autosave still want a live click-through |
-| 10 | `.cappshub/` GitHub Contents reads | done | 10A `c2f50fd` (notes_cache + github.ts + cappshub.ts) · 10B `b82af64` (IntegrationCard + getIntegrationFor + plan-card preference) | 2026-05-21T22:00Z · green · build gate green; deploy `6a0f8222` ready | runtime of IntegrationCard wants a live eyeball; most repos lack `.cappshub/` (empty states expected until Phase 13 dogfood) |
+| 10 | `.cappshub/` GitHub Contents reads | done | 10A `c2f50fd` (notes_cache + github.ts + cappshub.ts) · 10B `b82af64` (IntegrationCard + getIntegrationFor + plan-card preference) · #30 `37fbd39` (notes sorted newest-first) | 2026-05-21T23:25Z · green · build gate green; deploy `6a0f9848` ready | empty-state UX user-verified on prod; populated path (tabs/notes-nav/plan label) dark until a repo gets `.cappshub/` (dogfood files for hub-dispatch handed to user) |
 | 11 | GitHub webhook | todo | — | — | — |
 | 12 | `/api/cappshub-events` + SSE + SyncToast | todo | — | — | — |
 | 13 | Slash command docs + dogfood | todo | — | — | — |
