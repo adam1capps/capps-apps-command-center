@@ -60,3 +60,15 @@ a { color: inherit; }
 @media (max-width: 960px) {
   .cc-detail-row { grid-template-columns: 1fr; }
 }
+
+/* full-page note editor: drop the right rail under the main column on narrow viewports */
+@media (max-width: 860px) {
+  .cc-note-page {
+    grid-template-columns: 1fr !important;
+    gap: 24px !important;
+  }
+  .cc-note-page aside {
+    border-left: none !important;
+    padding-left: 0 !important;
+  }
+}

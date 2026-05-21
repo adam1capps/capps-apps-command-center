@@ -1,8 +1,8 @@
 import { and, desc, eq, isNotNull, ne } from "drizzle-orm";
 
 import { db } from "@/db/client";
-import { apps, statusSnapshots } from "@/db/schema";
-import type { App, StatusSnapshot } from "@/db/schema";
+import { apps, notes, statusSnapshots } from "@/db/schema";
+import type { App, Note, StatusSnapshot } from "@/db/schema";
 import type { Issue } from "@/lib/derive";
 
 export type AppWithSnapshot = App & { snapshot: StatusSnapshot | null };
@@ -34,6 +34,16 @@ export async function getAppBySlug(slug: string): Promise<AppWithSnapshot | null
     .orderBy(desc(statusSnapshots.checkedAt))
     .limit(1);
   return { ...app, snapshot: snap ?? null };
+}
+
+// All notes for one app, newest-updated first. Drives the notes modal,
+// detail-page preview, and full-page editor.
+export async function getNotesForApp(appId: string): Promise<Note[]> {
+  return db
+    .select()
+    .from(notes)
+    .where(eq(notes.appId, appId))
+    .orderBy(desc(notes.updatedAt));
 }
 
 // Every app paired with its most recent status snapshot (DISTINCT ON app_id,
