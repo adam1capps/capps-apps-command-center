@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__github__pull_request_read",
+      "mcp__github__list_pull_requests",
+      "mcp__ed489899-f778-4b9e-9ded-a26816325bb0__netlify-project-services-reader",
+      "mcp__214d5704-e371-43af-9202-012a684338df__clerk_sdk_snippet",
+      "mcp__214d5704-e371-43af-9202-012a684338df__list_clerk_sdk_snippets",
+      "Bash(git fetch)",
+      "Bash(git fetch *)",
+      "Bash(pnpm lint)",
+      "Bash(pnpm typecheck)",
+      "Bash(jobs)"
+    ]
+  }
+}
