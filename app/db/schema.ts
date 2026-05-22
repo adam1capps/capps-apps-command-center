@@ -95,6 +95,19 @@ export const notesCache = pgTable(
   (t) => [unique("notes_cache_app_repo_unique").on(t.appId, t.repoPath)],
 );
 
+// Pre-created in Phase 11 (push webhook records `push` events here); Phase 12
+// owns the main use (hook / slash-command / SSE stream).
+export const integrationEvents = pgTable("integration_events", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  appId: uuid("app_id").references(() => apps.id, { onDelete: "cascade" }),
+  kind: text("kind").notNull(),
+  text: text("text").notNull(),
+  actor: text("actor"),
+  repoPath: text("repo_path"),
+  commitSha: text("commit_sha"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 export type App = typeof apps.$inferSelect;
 export type NewApp = typeof apps.$inferInsert;
 export type StatusSnapshot = typeof statusSnapshots.$inferSelect;
@@ -104,3 +117,5 @@ export type Note = typeof notes.$inferSelect;
 export type NewNote = typeof notes.$inferInsert;
 export type NoteCache = typeof notesCache.$inferSelect;
 export type NewNoteCache = typeof notesCache.$inferInsert;
+export type IntegrationEvent = typeof integrationEvents.$inferSelect;
+export type NewIntegrationEvent = typeof integrationEvents.$inferInsert;

@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 
 import { db } from "@/db/client";
 import { apps, notesCache } from "@/db/schema";
@@ -37,6 +37,30 @@ async function resolveApp(slug: string): Promise<{ appId: string; repo: string }
     .limit(1);
   if (!app || !app.githubRepo) return null;
   return { appId: app.id, repo: app.githubRepo };
+}
+
+// Resolve an app id from a "owner/name" repo (the push webhook's key).
+export async function resolveAppByRepo(repo: string): Promise<string | null> {
+  const [app] = await db
+    .select({ id: apps.id })
+    .from(apps)
+    .where(eq(apps.githubRepo, repo))
+    .limit(1);
+  return app?.id ?? null;
+}
+
+// Drop cached rows for the given repo paths so the next read re-fetches from
+// GitHub. If a note file changed, also drop the notes-dir listing so an added
+// or removed note shows up. Returns the number of cache rows removed.
+export async function invalidatePaths(appId: string, paths: string[]): Promise<number> {
+  const targets = new Set(paths);
+  if (paths.some((p) => p.startsWith(`${NOTES_DIR}/`))) targets.add(NOTES_DIR);
+  if (targets.size === 0) return 0;
+  const removed = await db
+    .delete(notesCache)
+    .where(and(eq(notesCache.appId, appId), inArray(notesCache.repoPath, [...targets])))
+    .returning({ id: notesCache.id });
+  return removed.length;
 }
 
 async function upsertCache(
