@@ -16,8 +16,9 @@ Mid-port from a static Babel-in-browser prototype (`/prototype/`) to a productio
 
 3. Current state (as of 2026-05-28):
    - **Phases 1-11 fully done.** Public showcase, 6h poller + manual trigger, Clerk auth, dashboard (Grid/Pipeline/Attention) with URL view-state, full app detail page (hero / quick stats / editable next-move·plan·blockers / activity / Repo/DB/Hosting/API/Traffic panels), notes CRUD + modal + full-page editor, `.cappshub/` GitHub Contents read layer + IntegrationCard, and the GitHub push webhook → `notes_cache` invalidation + `integration_events` row — **the webhook is verified operational end-to-end on `adam1capps/hub-dispatch`** (2 push events landed in `integration_events` as of 2026-05-28).
-   - **Site is healthy** at `https://hub.cappsapps.ai` (latest implement-command-center merge `42728d4`, SCP green; tracker-update commits since are doc-only).
-   - **No blockers right now.** Phase 12A (`/api/cappshub-events` POST + SSE stream) is 👉 NEXT and is pure code work (no user-gated step).
+   - **Phase 12A merged** (PR #33 → `af8ba5a`): `POST /api/cappshub-events` (Bearer-guarded by `CAPPSHUB_HOOK_TOKEN`, `timingSafeEqual`, zod body, kind enum) + `GET /api/events/stream` (Clerk-gated SSE, polls `integration_events` every 1.5s, 30s heartbeats, `AbortSignal` cleanup). Build gate green; runtime smoke test owed (curl + EventSource snippets are in PR #33's body).
+   - **Site is healthy** at `https://hub.cappsapps.ai` (latest merge `af8ba5a`, SCP green).
+   - **No blockers right now.** Phase 12B (`SyncToast` component + `/integration` page) is 👉 NEXT — consumes the Phase 12A SSE stream and the events table; pure UI work, no env vars, no schema change.
 
 ## What's blocking, and the resume point
 
@@ -31,7 +32,7 @@ Nothing is blocking right now. Phase 11 ran the full gauntlet (merge → `bundle
 
 3. **Webhook secret rotations must be lockstep.** When rotating `CAPPSHUB_WEBHOOK_SECRET`, the order is: (a) new value into Netlify per-context as a true secret, (b) trigger production redeploy and wait for `ready`, (c) PATCH the GitHub hook config with the new secret (sending the full `config` block — GitHub treats it as a replacement). Between (b) and (c) GitHub still has the old secret, so don't dawdle.
 
-**Next code work: Phase 12A** per PLAN.md ("PR 12A: Backend — events table + POST + SSE stream"). The `integration_events` schema is already done; Phase 12A's additions are `/api/cappshub-events` (POST, `Authorization: Bearer $CAPPSHUB_HOOK_TOKEN`, returns 204) + `/api/events/stream` (SSE, 30s heartbeats). Before exercising, set `CAPPSHUB_HOOK_TOKEN` on Netlify (still missing; see Provisioning state).
+**Next code work: Phase 12B** per PLAN.md ("PR 12B: Frontend — SyncToast + global integration page"). Phase 12A backend is in place (POST + SSE stream merged 2026-05-28). 12B adds `app/components/SyncToast.tsx` (`EventSource` subscriber, 5.2s display per `prototype/app.jsx:55`, port from `prototype/ui-integration.jsx:571-615`), `app/app/integration/page.tsx` (port from `prototype/ui-integration.jsx:289-506` — hero / stats / slash commands / hook config / `.cappshub/` spec / live event feed / connected repos), and `app/lib/cappshub-spec.ts` (port from `prototype/cc-integration.js:21-50` + `:53-85`). Acceptance: POST 204 → event row → toast within 2s on the dashboard → visible on `/integration`. No env vars, no schema change.
 
 **Optional hook rollout (deferred):** the push webhook is currently only installed on `adam1capps/hub-dispatch` (1 of ~13 managed repos with `githubRepo`). Rolling out to the rest is dormant work — they have no `.cappshub/` files yet, so the hook would fire on every push but write no event row until a commit touches `.cappshub/*` or `CLAUDE.md`. Revisit when seeding `.cappshub/` files across the portfolio (Phase 13 dogfood) becomes the active task. Install script: `app/scripts/install-webhooks.ts`, exposed as `pnpm webhooks:install [filter]` (needs `GITHUB_TOKEN` + `CAPPSHUB_WEBHOOK_SECRET` in `app/.env.local`).
 
