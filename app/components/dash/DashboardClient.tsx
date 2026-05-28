@@ -3,6 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
+import { SyncToast } from "@/components/SyncToast";
 import { CATEGORIES } from "@/lib/constants";
 import type { ViewId } from "@/lib/constants";
 import type { Category } from "@/lib/tokens";
@@ -41,6 +42,12 @@ export function DashboardClient({
     return () => clearTimeout(id);
   }, [q]);
 
+  const slugMap = useMemo(() => {
+    const m: Record<string, { slug: string; name: string }> = {};
+    for (const a of apps) m[a.id] = { slug: a.slug, name: a.name };
+    return m;
+  }, [apps]);
+
   const matched = useMemo(() => {
     const term = debouncedQ.trim().toLowerCase();
     if (!term) return apps;
@@ -67,6 +74,7 @@ export function DashboardClient({
         {view === "pipeline" && <PipelineView apps={matched} />}
         {view === "attention" && <AttentionView apps={matched} />}
       </main>
+      <SyncToast slugMap={slugMap} />
     </>
   );
 }
