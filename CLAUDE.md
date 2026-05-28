@@ -1,10 +1,10 @@
 # Capps Apps Command Center — Active Build (Session Handoff)
 
-Mid-port from a static Babel-in-browser prototype (`/prototype/`) to a production Next.js 16 app (`/app/`) on Netlify, ultimately at `hub.cappsapps.ai`. The full implementation plan + live tracker is in **`PLAN.md`** — the "Roadmap at a glance" table near the top is the single source of truth for "where are we." Read that first.
+Mid-port from a static Babel-in-browser prototype (`/prototype/`) to a production Next.js 16 app (`/app/`) on Netlify, ultimately at `hub.cappsapps.ai`. The full implementation plan + live tracker is in **`PLAN.md`** — the "Phase status" table near the end + the "Current phase" blurb just above it are the single source of truth for "where are we." Read that first.
 
 ## Land here first
 
-1. Default landing is `implement-command-center` (the de-facto main). No code branch is in flight right now (Phase 11 just merged via PR #31; Phase 12A is the next code work and has no open branch yet). Refresh:
+1. Default landing is `implement-command-center` (the de-facto main). No code branch is in flight right now. Refresh:
 
    ```bash
    git fetch origin
@@ -12,44 +12,28 @@ Mid-port from a static Babel-in-browser prototype (`/prototype/`) to a productio
    git pull
    ```
 
-2. Read `PLAN.md` end to end. The "Roadmap at a glance" table at the top is the live status surface — update it after every merge. The "How to read this plan" section and the "Sanity Check Protocol" govern every phase.
+2. Read `PLAN.md` end to end. The "Phase status" table is the live tracker — update it after every merge alongside the "Current phase" blurb just above it. The "How to read this plan" section and the "Sanity Check Protocol" govern every phase.
 
-3. Current state (as of 2026-05-22, merge `42728d4`):
-   - **Phases 1-11 merged**. Public showcase, 6h poller + manual trigger, Clerk auth, dashboard (Grid/Pipeline/Attention) with URL view-state, full app detail page (hero / quick stats / editable next-move·plan·blockers / activity / Repo/DB/Hosting/API/Traffic panels), notes CRUD + modal + full-page editor, `.cappshub/` GitHub Contents read layer + IntegrationCard, and the GitHub push webhook → `notes_cache` invalidation + `integration_events` row.
-   - **Site is healthy** at `https://hub.cappsapps.ai` (current deploy `6a0fb8e3` ready; SCP green at `42728d4`).
-   - **Phase 11 has runtime debt, not blocking the site** (see next section).
-   - **Phase 12A** (`/api/cappshub-events` POST + SSE stream) is 👉 NEXT.
+3. Current state (as of 2026-05-28):
+   - **Phases 1-11 fully done.** Public showcase, 6h poller + manual trigger, Clerk auth, dashboard (Grid/Pipeline/Attention) with URL view-state, full app detail page (hero / quick stats / editable next-move·plan·blockers / activity / Repo/DB/Hosting/API/Traffic panels), notes CRUD + modal + full-page editor, `.cappshub/` GitHub Contents read layer + IntegrationCard, and the GitHub push webhook → `notes_cache` invalidation + `integration_events` row — **the webhook is verified operational end-to-end on `adam1capps/hub-dispatch`** (2 push events landed in `integration_events` as of 2026-05-28).
+   - **Site is healthy** at `https://hub.cappsapps.ai` (latest implement-command-center merge `42728d4`, SCP green; tracker-update commits since are doc-only).
+   - **No blockers right now.** Phase 12A (`/api/cappshub-events` POST + SSE stream) is 👉 NEXT and is pure code work (no user-gated step).
 
 ## What's blocking, and the resume point
 
-Phase 11 is **code-merged**; one remaining user-driven step before the endpoint is live. The webhook endpoint exists and verifies HMAC, and `integration_events` is now created in Neon (`bundle-0004.sql` applied 2026-05-22, count=0, schema verified). No hook is installed in any managed repo yet, so the endpoint is dormant until at least one is.
+Nothing is blocking right now. Phase 11 ran the full gauntlet (merge → `bundle-0004.sql` → hook install → live verification → secret rotation to true Netlify secret per-context with the GitHub hook re-keyed in lockstep) and is done.
 
-1. ~~Apply `app/db/bundle-0004.sql` in the Neon SQL Editor.~~ **Done 2026-05-22.** Gotcha for future bundles: the original `CREATE TABLE` / `ALTER TABLE ... ADD CONSTRAINT` was not idempotent and rolled back on re-run (a prior session had already created the table). An idempotent rewrite (`CREATE TABLE IF NOT EXISTS` + `DO $$ ... IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = ...) ... $$`) cleared it. Consider authoring future bundles idempotently from the start.
+**Lessons captured for future use:**
 
-2. **Install the webhook on managed repos.** User chose the local-toolchain path (vs. the GitHub web UI). Their Mac doesn't yet have a clone of this repo, Node, or pnpm. Setup path:
+1. **Bundles must be idempotent from the start.** The original `bundle-0004.sql` used bare `CREATE TABLE` / `ALTER TABLE ADD CONSTRAINT`, which rolled back on re-run when the table already existed. The idempotent rewrite (`CREATE TABLE IF NOT EXISTS` + `DO $$ ... IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = ...) ... $$`) is the pattern to use going forward.
 
-   ```bash
-   # one-time toolchain (Mac):
-   brew install node pnpm        # or `corepack enable pnpm` if Node ≥16.13 is already present
-   cd ~
-   git clone https://github.com/adam1capps/capps-apps-command-center.git
-   cd capps-apps-command-center/app
-   pnpm install
+2. **Netlify secret-setting must be true-secret per-context.** A secret env var set as `context:"all"` silently no-ops (this caused the 2026-05-20 outage). A secret env var set per-context but flagged *non-secret* is functional but leaks in the UI and build logs. The pattern that actually works: delete any existing entry, then create per-context with `envVarIsSecret: true` (one create per context), then redeploy. Toggling "secret" on an existing variable does not update the flag reliably.
 
-   # secrets file (gitignored). CAPPSHUB_WEBHOOK_SECRET must match Netlify byte-for-byte.
-   # Create app/.env.local containing:
-   #   GITHUB_TOKEN=<classic PAT, repo scope>
-   #   CAPPSHUB_WEBHOOK_SECRET=<exact value from Netlify>
+3. **Webhook secret rotations must be lockstep.** When rotating `CAPPSHUB_WEBHOOK_SECRET`, the order is: (a) new value into Netlify per-context as a true secret, (b) trigger production redeploy and wait for `ready`, (c) PATCH the GitHub hook config with the new secret (sending the full `config` block — GitHub treats it as a replacement). Between (b) and (c) GitHub still has the old secret, so don't dawdle.
 
-   # stage to one repo first (idempotent), then expand the filter:
-   pnpm webhooks:install hub-dispatch
-   ```
+**Next code work: Phase 12A** per PLAN.md ("PR 12A: Backend — events table + POST + SSE stream"). The `integration_events` schema is already done; Phase 12A's additions are `/api/cappshub-events` (POST, `Authorization: Bearer $CAPPSHUB_HOOK_TOKEN`, returns 204) + `/api/events/stream` (SSE, 30s heartbeats). Before exercising, set `CAPPSHUB_HOOK_TOKEN` on Netlify (still missing; see Provisioning state).
 
-   The install script is `scripts/install-webhooks.ts`; its sibling `uninstall-webhooks.ts` is exposed as `pnpm webhooks:uninstall [filter]`. Both take an optional substring filter on repo name.
-
-3. **Then proceed to Phase 12A** per PLAN.md ("PR 12A: Backend — events table + POST + SSE stream"). `integration_events` is already the table Phase 12 uses heavily, so Phase 12A's schema work is mostly solidifying types; the new build is `/api/cappshub-events` (POST, Bearer-token-guarded, returns 204) + `/api/events/stream` (SSE, 30s heartbeats).
-
-Until those land, the live site is fine — every Phase 1-10 surface still works on cached + DB-backed reads.
+**Optional hook rollout (deferred):** the push webhook is currently only installed on `adam1capps/hub-dispatch` (1 of ~13 managed repos with `githubRepo`). Rolling out to the rest is dormant work — they have no `.cappshub/` files yet, so the hook would fire on every push but write no event row until a commit touches `.cappshub/*` or `CLAUDE.md`. Revisit when seeding `.cappshub/` files across the portfolio (Phase 13 dogfood) becomes the active task. Install script: `app/scripts/install-webhooks.ts`, exposed as `pnpm webhooks:install [filter]` (needs `GITHUB_TOKEN` + `CAPPSHUB_WEBHOOK_SECRET` in `app/.env.local`).
 
 ## Locked decisions (do not relitigate)
 
@@ -86,7 +70,7 @@ Until those land, the live site is fine — every Phase 1-10 surface still works
 | `NETLIFY_DATABASE_URL` (Netlify env) | done | pooled Neon URL, rotated + hardened post-incident: **secret per-context** (`production` + `deploy-preview`). The 2026-05-20 outage was this var silently no-op'ing under `context:"all"` (see below). |
 | `GITHUB_TOKEN` (Netlify env) | done, security debt | classic PAT, scope `repo`, login `adam1capps`. **Currently stored non-secret, context `all`** + leaked to prior session transcript → rotate + re-add as secret per-context. Functional today because non-secret vars resolve fine on `all`. |
 | Clerk publishable + secret keys | done | `NEXT_PUBLIC_CLERK_*` non-secret context `all` (publishable values, fine); `CLERK_SECRET_KEY` secret per-context (production / deploy-preview / branch-deploy / dev). Reference pattern for any new secret. |
-| `CAPPSHUB_WEBHOOK_SECRET` (Netlify env) | **MISSING** | Phase 11 needs it to HMAC-verify GitHub pushes. Add as secret per-context. Must match the value baked into the GitHub webhook config exactly. |
+| `CAPPSHUB_WEBHOOK_SECRET` (Netlify env) | done | Set 2026-05-28 as true secret per-context (production + deploy-preview + branch-deploy + preview-server; production + deploy-preview is what's exercised). Rotated once already: initial value was non-secret + leaked through CLI history → rotated to fresh value with the GitHub hook on `hub-dispatch` re-keyed in lockstep. Must match the value baked into the GitHub webhook config exactly. |
 | `CAPPSHUB_HOOK_TOKEN` (Netlify env) | **MISSING** | Phase 12 `/api/cappshub-events` Bearer-token. Add as secret per-context before Phase 12A is exercised. |
 | `X_TRIGGER_TOKEN` (Netlify env) | **MISSING** | Phase 4 `/api/poll-now` guard. Add as secret per-context before the manual trigger works in production. |
 | DNS `hub.cappsapps.ai` | done (early) | already resolves to the Netlify site (per `urls.primarySiteUrl`). Phase 14C is now mostly a polish/verify step rather than a real cutover. |
