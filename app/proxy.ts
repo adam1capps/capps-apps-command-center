@@ -4,7 +4,11 @@ import { NextResponse } from "next/server";
 // Next 16 renamed middleware to proxy. Clerk's clerkMiddleware is exported as
 // the default proxy. It runs on every matched request to attach auth context;
 // it only enforces auth on the protected routes below.
-const isProtectedRoute = createRouteMatcher(["/dashboard(.*)", "/app/(.*)"]);
+const isProtectedRoute = createRouteMatcher([
+  "/dashboard(.*)",
+  "/app/(.*)",
+  "/integration(.*)",
+]);
 
 const ALLOWED_DOMAIN = "@re-dry.com";
 
