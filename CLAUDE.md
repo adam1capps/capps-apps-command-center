@@ -22,9 +22,9 @@ Mid-port from a static Babel-in-browser prototype (`/prototype/`) to a productio
 
 ## What's blocking, and the resume point
 
-Phase 11 is **code-merged but dormant** until two user-driven steps land. The webhook endpoint exists and verifies HMAC, but no hook is installed in any managed repo yet, and the `integration_events` table does not yet exist in Neon. Order matters: **apply the SQL first, then install hooks** (otherwise the event-insert returns 500).
+Phase 11 is **code-merged**; one remaining user-driven step before the endpoint is live. The webhook endpoint exists and verifies HMAC, and `integration_events` is now created in Neon (`bundle-0004.sql` applied 2026-05-22, count=0, schema verified). No hook is installed in any managed repo yet, so the endpoint is dormant until at least one is.
 
-1. **Apply `app/db/bundle-0004.sql` in the Neon SQL Editor** (creates `integration_events`). User task, ~30 seconds; pattern is identical to bundles 0001-0003. After it succeeds, record `bundle-0004.sql applied` in the PLAN.md tracker.
+1. ~~Apply `app/db/bundle-0004.sql` in the Neon SQL Editor.~~ **Done 2026-05-22.** Gotcha for future bundles: the original `CREATE TABLE` / `ALTER TABLE ... ADD CONSTRAINT` was not idempotent and rolled back on re-run (a prior session had already created the table). An idempotent rewrite (`CREATE TABLE IF NOT EXISTS` + `DO $$ ... IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = ...) ... $$`) cleared it. Consider authoring future bundles idempotently from the start.
 
 2. **Install the webhook on managed repos.** User chose the local-toolchain path (vs. the GitHub web UI). Their Mac doesn't yet have a clone of this repo, Node, or pnpm. Setup path:
 
@@ -82,7 +82,7 @@ Until those land, the live site is fine — every Phase 1-10 surface still works
 | Netlify site | done | id `c681f8dd-aae1-4519-9b71-db26114b6dc0`, team `adam-iusbapy` (ReDry), Pro plan, name `capps-apps-command-center` |
 | Netlify ↔ GitHub link | done | PRs auto-deploy preview; production builds on push to `implement-command-center` |
 | Site public access | done | toggled Public 2026-05-21; previously 403 `host_not_allowed` |
-| Neon project | done | `capps-command-center` in ReDry LLC org (Scale plan), branch `production`, db `neondb`, role `neondb_owner`. Bundles `bundle-seed.sql` (apps + status_snapshots, 37/37 seeded) · `bundle-0001.sql` (apps.plan + change_log) · `bundle-0002.sql` (notes) · `bundle-0003.sql` (notes_cache) all applied. **`bundle-0004.sql` (integration_events) NOT yet applied** — see "What's blocking". **Networking gotcha:** new Neon projects in this org ship with Settings → Networking → "Allow traffic via the public internet" OFF. Toggle ON; leave VPC OFF. |
+| Neon project | done | `capps-command-center` in ReDry LLC org (Scale plan), branch `production`, db `neondb`, role `neondb_owner`. Bundles all applied: `bundle-seed.sql` (apps + status_snapshots, 37/37 seeded) · `bundle-0001.sql` (apps.plan + change_log) · `bundle-0002.sql` (notes) · `bundle-0003.sql` (notes_cache) · `bundle-0004.sql` (integration_events, applied 2026-05-22; count=0). **Networking gotcha:** new Neon projects in this org ship with Settings → Networking → "Allow traffic via the public internet" OFF. Toggle ON; leave VPC OFF. |
 | `NETLIFY_DATABASE_URL` (Netlify env) | done | pooled Neon URL, rotated + hardened post-incident: **secret per-context** (`production` + `deploy-preview`). The 2026-05-20 outage was this var silently no-op'ing under `context:"all"` (see below). |
 | `GITHUB_TOKEN` (Netlify env) | done, security debt | classic PAT, scope `repo`, login `adam1capps`. **Currently stored non-secret, context `all`** + leaked to prior session transcript → rotate + re-add as secret per-context. Functional today because non-secret vars resolve fine on `all`. |
 | Clerk publishable + secret keys | done | `NEXT_PUBLIC_CLERK_*` non-secret context `all` (publishable values, fine); `CLERK_SECRET_KEY` secret per-context (production / deploy-preview / branch-deploy / dev). Reference pattern for any new secret. |
